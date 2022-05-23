@@ -1,0 +1,35 @@
+[package]
+name = "serde-bindgen-core-derive"
+version = "0.1.1"
+edition = "2021"
+license-file = "LICENSE"
+description = "Generate \"C\" bindings for serde"
+repository = "https://github.com/TomzBench/serde-bindgen-core"
+keywords = ["bindings", "ffi", "code-generation", "serde", "bindgen"]
+categories = ["external-ffi-bindings", "development-tools::ffi"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["full"] }
+heck = "0.4"
+
+[lib]
+proc-macro = true
+
+#[[test]]
+#name = "tests"
+#path = "tests/progress.rs"
+
+#[[bin]]
+#name = "gen"
+#path = "src/bin.rs"
+
+#[features]
+#testing = ["serde-bindgen-core/testing", "syn/full", "syn/extra-traits"]
+[features]
+default = []
+testing = ["full"]
+full = ["syn/full", "syn/extra-traits"]

@@ -1,0 +1,24 @@
+/.west
+/bootloader
+/modules
+/tools
+/zephyr
+/zmk-config
+/build
+/twister*
+*.DS_Store
+__pycache__
+
+# ctags
+GPATH
+GRTAGS
+GTAGS
+TAGS
+tags
+
+# cargo
+target
+**/*.rs.bk
+Cargo.lock
+
+.cache

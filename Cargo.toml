@@ -1,0 +1,3 @@
+[workspace]
+members = ["sbc", "sbc-derive"]
+resolver = "2"
