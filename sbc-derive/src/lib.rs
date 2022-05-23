@@ -66,10 +66,12 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // render all the new items
     let quoted = quote! {
+        #[repr(C)]
         #[derive(serde::Deserialize)]
         #[derive(serde::Serialize)]
         #[serde(crate="self::serde")]
         #ctx
+        #[repr(C)]
         #owned
         #impl_default
         #impl_from
