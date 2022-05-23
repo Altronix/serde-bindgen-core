@@ -38,18 +38,17 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     let prefix = parse_macro_input!(attr as AttributeConfig)
         .0
         .map(|(_, _, s)| s.value())
-        .unwrap_or("foo".to_string());
+        .unwrap_or("sbc".to_string());
 
     // TODO - rename Type      => TypeParsed
     //      - rename TypeOwned => Type
-    //      - allow uninitialized strings
     //      - calculate worst case length
 
     // Prse the callers decorated struct
     let ctx: Context = parse_macro_input!(item);
 
     // create an "owned" version of the struct. (no references)
-    let owned = ctx.clone().impl_owned();
+    let owned = ctx.clone().into_owned();
 
     // create impl Default block
     let impl_default = ctx.impl_default();

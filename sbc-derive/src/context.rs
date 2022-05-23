@@ -51,7 +51,7 @@ impl Context {
         self.fields.iter_mut().for_each(|f| f.stackify());
     }
 
-    pub fn impl_owned(mut self) -> Context {
+    pub fn into_owned(mut self) -> Context {
         self.stackify();
         self
     }
