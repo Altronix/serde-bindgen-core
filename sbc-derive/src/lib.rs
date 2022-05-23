@@ -40,6 +40,11 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
         .map(|(_, _, s)| s.value())
         .unwrap_or("foo".to_string());
 
+    // TODO - rename Type      => TypeParsed
+    //      - rename TypeOwned => Type
+    //      - allow uninitialized strings
+    //      - calculate worst case length
+
     // Prse the callers decorated struct
     let ctx: Context = parse_macro_input!(item);
 
