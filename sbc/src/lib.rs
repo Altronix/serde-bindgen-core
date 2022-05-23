@@ -21,7 +21,10 @@
 #![feature(lang_items)]
 #![cfg_attr(not(test), no_std)]
 
+pub use serde;
 pub use serde_bindgen_core_derive::binding;
+pub use serde_json_core;
+pub use serde_json_core::heapless;
 
 #[inline]
 fn safe_copy<T: Copy + Default, const N: usize>(src: &[T]) -> [T; N] {
