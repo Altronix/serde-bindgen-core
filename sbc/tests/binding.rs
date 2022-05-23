@@ -30,8 +30,8 @@ use serde_json_core;
 
 mod songs {
     use serde;
-    use serde_json_core;
     use serde_bindgen_core::binding;
+    use serde_json_core;
 
     #[derive(Debug, PartialEq, Clone)]
     #[binding]
@@ -83,6 +83,8 @@ pub struct JingleBells<'a> {
     pub b9: [[&'a str; 3]; 2],
     /// sbc: default = [1, 2, 3]
     pub b10: [u8; 3],
+    /// uninitialized test
+    pub b11: &'a str,
 }
 
 const DATA: &'static str = r#"
@@ -148,7 +150,8 @@ const DATA: &'static str = r#"
     ["apple", "banana", "car"],
     ["apple", "banana", "car"]
     ],
-  "b10": [36, 37, 38]
+  "b10": [36, 37, 38],
+  "b11": "apple"
 }
 "#;
 
@@ -212,6 +215,7 @@ const ROOT: JingleBells = JingleBells {
     b8: ["apple", "banana", "car"],
     b9: [["apple", "banana", "car"], ["apple", "banana", "car"]],
     b10: [36, 37, 38],
+    b11: "apple",
 };
 
 macro_rules! stringify {
@@ -267,6 +271,7 @@ fn assert_parsed(f: &JingleBells) {
     assert_eq!(f.b9[1][1], "banana");
     assert_eq!(f.b9[1][2], "car");
     assert_eq!(f.b10, [36, 37, 38]);
+    assert_eq!(f.b11, "apple");
 }
 
 fn assert_parsed_owned(f: &JingleBellsOwned) {
@@ -316,6 +321,7 @@ fn assert_parsed_owned(f: &JingleBellsOwned) {
     assert_eq!(stringify!(&f.b9[1][1]), "banana");
     assert_eq!(stringify!(&f.b9[1][2]), "car");
     assert_eq!(f.b10, [36, 37, 38]);
+    assert_eq!(f.b11, []);
 }
 
 #[test]
@@ -378,6 +384,7 @@ fn can_init() {
     assert_eq!(f.b7[1].b1, 30);
     assert_eq!(f.b7[2].b1, 30);
     assert_eq!(f.b10, [1, 2, 3]);
+    assert_eq!(f.b11, []);
 }
 
 #[test]

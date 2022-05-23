@@ -24,10 +24,9 @@
 #![allow(unused)]
 
 // use data::serde;
-use serde_bindgen_core::*;
+use serde_bindgen_core::binding;
 use serde_bindgen_core::serde;
 use serde_bindgen_core::serde_json_core;
-use serde_bindgen_core_derive::binding;
 
 #[binding]
 pub struct Bar<'a> {
@@ -47,6 +46,8 @@ pub struct Foo<'a> {
     /// sbc: default = "hello"
     /// sbc: len = 12
     id4: &'a str,
+    /// junk
+    id5: &'a str,
 }
 
 fn main() {}

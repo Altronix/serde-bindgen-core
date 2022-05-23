@@ -148,8 +148,10 @@ impl FieldType {
 
     pub fn assignment_tokens(&self, expr: &Option<&DefaultLit>) -> TokenStream {
         match (expr, &self) {
-            (Some(e), FieldType::RefStr(_)) => quote! {serde_bindgen_core::SafeCopy::safe_copy(&#e)},
-            (None, FieldType::RefStr(_)) => quote! {""},
+            (Some(e), FieldType::RefStr(_)) => {
+                quote! {serde_bindgen_core::SafeCopy::safe_copy(&#e)}
+            }
+            (None, FieldType::RefStr(_)) => quote! {serde_bindgen_core::SafeCopy::safe_copy(&"")},
             (_, FieldType::Struct(_)) => quote! {Default::default()},
             (None, FieldType::Primative(i)) if i == "bool" => quote! {false},
             (None, FieldType::Primative(_)) => quote! {0},

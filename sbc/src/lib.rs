@@ -55,9 +55,14 @@ impl_safe_copy_for_slice!(u8);
 impl_safe_copy_for_slice!(i8);
 
 impl<const N: usize> SafeCopy<u8, N> for &str {
+    #[inline]
     fn safe_copy(&self) -> [u8; N] {
         let mut ret = self.as_bytes().safe_copy();
-        ret[N - 1] = 0;
+        // handle case when N == 0.
+        // Probably a better way to do this
+        if N > 0 {
+            ret[N - 1] = 0;
+        }
         ret
     }
 }

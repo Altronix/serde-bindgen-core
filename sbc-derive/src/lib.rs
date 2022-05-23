@@ -49,7 +49,7 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     let ctx: Context = parse_macro_input!(item);
 
     // create an "owned" version of the struct. (no references)
-    let owned = ctx.impl_owned();
+    let owned = ctx.clone().impl_owned();
 
     // create impl Default block
     let impl_default = ctx.impl_default();
