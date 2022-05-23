@@ -1,6 +1,6 @@
 [package]
 name = "serde-bindgen-core"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license-file = "LICENSE"
 description = "Generate \"C\" bindings for serde"
@@ -13,7 +13,7 @@ categories = ["no-std", "external-ffi-bindings", "development-tools::ffi"]
 [dependencies]
 serde = { version = "1", default-features = false, features = ["derive"] }
 serde-json-core = { version = "0.4", default-features = false, features = ["heapless"] }
-serde-bindgen-core-derive = { path = "../sbc-derive", version = "0.1.1", default-features = false }
+serde-bindgen-core-derive = { path = "../sbc-derive", version = "0.1", default-features = false }
 
 [dev-dependencies]
 trybuild = { version = "1.0", features = ["diff"] }
