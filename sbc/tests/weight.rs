@@ -58,5 +58,6 @@ fn can_calculate_weight() {
     let mut len = 2096;
 
     let ret = unsafe { test_print_foo(&foo, &mut *buffer.as_mut_ptr(), &mut len) };
+    assert_eq!(ret, 0);
     assert_eq!(len, FOO_MAX_LEN);
 }
