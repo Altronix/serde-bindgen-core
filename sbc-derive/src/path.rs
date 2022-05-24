@@ -29,6 +29,8 @@ use syn::WhereClause;
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 
+use heck::AsShoutySnakeCase;
+
 use super::utils;
 
 #[derive(Clone)]
@@ -59,6 +61,12 @@ impl PathNamed {
     pub fn stackify(&mut self) -> &mut Self {
         self.rename(&format!("{}Owned", self.ident))
             .strip_generics();
+        self
+    }
+
+    pub fn into_shouty_max_len(mut self) -> Self {
+        let max_len = AsShoutySnakeCase(format!("{}_MAX_LEN", self.ident)).to_string();
+        self.rename(&max_len).strip_generics();
         self
     }
 

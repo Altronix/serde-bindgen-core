@@ -3,6 +3,12 @@ use serde_bindgen_core::binding;
 use serde_json_core;
 
 #[binding(prefix = "test")]
+pub struct Remote<'a> {
+    ///sbc: len = 4
+    id0: &'a str,
+}
+
+#[binding(prefix = "test")]
 pub struct Foo<'a> {
     id0: u8,
     id1: i8,
@@ -13,6 +19,7 @@ pub struct Foo<'a> {
     id6: bool,
     /// sbc: len = 5
     id7: &'a str,
+    id8: Remote<'a>
 }
 
 const DATA: &'static str = r#"
@@ -24,7 +31,10 @@ const DATA: &'static str = r#"
     "id4": 4294967295,
     "id5": -2147483647,
     "id6": false,
-    "id7": "12345"
+    "id7": "12345",
+    "id8": {
+      "id0": "1234"
+    }
 }
 "#;
 

@@ -134,6 +134,7 @@ impl FieldType {
             FieldType::Primative(p) if p == "u32" => (10, None), // sizeof(4294967296)
             FieldType::Primative(p) if p == "i32" => (11, None), // sizeof(-2147483648)
             FieldType::RefStr(_) => (attrs.seek_len() + 2, None), // sizeof("%s")
+            FieldType::Struct(p) => (0, Some(p)),
             _ => (0, None),
         }
     }

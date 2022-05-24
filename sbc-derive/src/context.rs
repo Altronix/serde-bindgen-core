@@ -27,7 +27,7 @@ use syn::punctuated::Punctuated;
 use syn::Token;
 
 // heck::
-use heck::{AsShoutySnakeCase, AsSnakeCase};
+use heck::AsSnakeCase;
 
 // proc_macro2
 use proc_macro2::TokenStream;
@@ -174,16 +174,16 @@ impl<'a> ImplWeight<'a> {
 
 impl<'a> ToTokens for ImplWeight<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let weight = self.weight;
         let (_other, mut ident) = self.path.split_self_for_impl();
-        ident
-            .rename(&format!(
-                "{}_MAX_LEN",
-                AsShoutySnakeCase(format!("{}", ident.ident))
-            ))
-            .strip_generics();
+        let weight = self.weight;
+        let remotes = self
+            .remotes
+            .iter()
+            .map(|remote| (*remote).clone().into_shouty_max_len())
+            .fold(None, |acc, next| Some(quote! {#acc + #next}));
+        ident = ident.clone().into_shouty_max_len();
         quote! {
-            const #ident: usize = #weight;
+            pub const #ident: usize = #weight #remotes;
         }
         .to_tokens(toks);
     }
