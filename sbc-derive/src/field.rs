@@ -31,8 +31,8 @@ use syn::parse::{Error, Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
 use syn::token::Bracket;
 use syn::Ident;
+use syn::LitInt;
 use syn::Token;
-use syn::{Lit, LitInt};
 
 // quote::
 use quote::quote;
@@ -44,12 +44,6 @@ use proc_macro2::TokenStream;
 use super::attributes::{Attribute, DefaultLit};
 use super::path::PathNamed;
 use super::utils;
-
-pub trait FieldTokens {
-    fn stackify(&mut self) {}
-    fn assignment_tokens(&self, field: &Ident, lit: &Lit) -> TokenStream;
-    fn from_parsed_tokens(&self, field: &Ident, var: &Ident) -> TokenStream;
-}
 
 #[derive(Clone)]
 pub struct Field {
