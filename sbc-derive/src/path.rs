@@ -67,14 +67,6 @@ impl PathNamed {
         self
     }
 
-    pub fn into_split(self) -> (Self, Self) {
-        let mut owned = self.clone();
-        let mut parse = self.clone();
-        owned.stackify();
-        parse.parsify();
-        (owned, parse)
-    }
-
     pub fn rename(&mut self, name: &str) -> &mut Self {
         self.ident = Ident::new(name, self.ident.span());
         self
@@ -85,7 +77,15 @@ impl PathNamed {
         self
     }
 
-    pub fn split_for_impl(
+    pub fn split_self_for_impl(&self) -> (Self, Self) {
+        let mut owned = self.clone();
+        let mut parse = self.clone();
+        owned.stackify();
+        parse.parsify();
+        (owned, parse)
+    }
+
+    pub fn split_generics_for_impl(
         &self,
     ) -> (
         Option<ImplGenerics>,

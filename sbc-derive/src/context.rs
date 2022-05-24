@@ -109,26 +109,24 @@ impl ToTokens for Context {
 }
 
 pub struct ImplDefault<'a> {
-    pub path: PathNamed,
+    pub path: &'a PathNamed,
     pub fields: &'a Punctuated<Field, Token![,]>,
 }
 
 impl<'a> ImplDefault<'a> {
-    pub fn new(path: &PathNamed, fields: &'a Punctuated<Field, Token![,]>) -> ImplDefault<'a> {
-        let mut path = path.clone();
-        path.stackify();
+    pub fn new(path: &'a PathNamed, fields: &'a Punctuated<Field, Token![,]>) -> ImplDefault<'a> {
         ImplDefault { path, fields }
     }
 }
 
 impl<'a> ToTokens for ImplDefault<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let ident = &self.path;
+        let (owned, _ident) = self.path.split_self_for_impl();
         let assignment_tokens = self.fields.iter().map(|field| field.assignment_tokens());
         quote! {
-            impl Default for #ident {
-                fn default() -> #ident {
-                    #ident {
+            impl Default for #owned {
+                fn default() -> #owned {
+                    #owned {
                         #(#assignment_tokens),*
                     }
                 }
@@ -151,8 +149,8 @@ impl<'a> ImplFrom<'a> {
 
 impl<'a> ToTokens for ImplFrom<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (other,ident) = self.path.clone().into_split();
-        let (impl_generics, _ty_generics, where_clause) = self.path.split_for_impl();
+        let (other, ident) = self.path.split_self_for_impl();
+        let (impl_generics, _ty_generics, where_clause) = self.path.split_generics_for_impl();
         let var = quote::format_ident!("s");
         let from_tokens = self.fields.iter().map(|field| field.from_tokens(&var));
         quote! {
@@ -181,8 +179,8 @@ impl<'a> BindingDefault<'a> {
 
 impl<'a> ToTokens for BindingDefault<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (owned, ident) = self.ident.clone().into_split();
-        let (impl_generics, _, _) = ident.split_for_impl();
+        let (owned, ident) = self.ident.split_self_for_impl();
+        let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_init_{}",
             self.prefix,
@@ -211,8 +209,8 @@ impl<'a> BindingCopy<'a> {
 
 impl<'a> ToTokens for BindingCopy<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (owned, ident) = self.ident.clone().into_split();
-        let (impl_generics, _, _) = ident.split_for_impl();
+        let (owned, ident) = self.ident.split_self_for_impl();
+        let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_copy_{}",
             self.prefix,
@@ -241,8 +239,8 @@ impl<'a> BindingParse<'a> {
 
 impl<'a> ToTokens for BindingParse<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_owned, ident) = self.ident.clone().into_split();
-        let (impl_generics, _, _) = ident.split_for_impl();
+        let (_owned, ident) = self.ident.split_self_for_impl();
+        let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_parse_{}",
             self.prefix,
@@ -278,8 +276,8 @@ impl<'a> BindingPrint<'a> {
 
 impl<'a> ToTokens for BindingPrint<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_owned, ident) = self.ident.clone().into_split();
-        let (impl_generics, _, _) = ident.split_for_impl();
+        let (_owned, ident) = self.ident.split_self_for_impl();
+        let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_print_{}",
             self.prefix,
