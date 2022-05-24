@@ -41,7 +41,7 @@ use quote::ToTokens;
 use proc_macro2::TokenStream;
 
 // super:
-use super::attributes::{Attribute, DefaultLit};
+use super::attributes::{Attribute, Attributes, DefaultLit};
 use super::path::PathNamed;
 use super::utils;
 
@@ -51,7 +51,7 @@ pub struct Field {
     pub tok_vis: Option<Token![pub]>,
     pub tok_col: Token![:],
     pub ty: FieldType,
-    pub attributes: Vec<Attribute>,
+    pub attributes: Attributes,
 }
 
 impl Field {
@@ -61,7 +61,7 @@ impl Field {
 
     pub fn assignment_tokens(&self) -> TokenStream {
         let name = &self.ident;
-        let init = self.attributes.iter().find_map(|attr| attr.default());
+        let init = self.attributes.seek_default();
         let assignment = self.ty.assignment_tokens(&init);
         quote! {#name: #assignment}
     }
@@ -71,6 +71,12 @@ impl Field {
         let expr = quote! {#var.#name};
         let assignment = self.ty.from_tokens(&syn::parse_quote! {#expr});
         quote! {#name: #assignment}
+    }
+
+    pub fn weight<'a>(&'a self) -> (usize, Option<&'a PathNamed>) {
+        let wrapper_len = self.ident.to_string().len() + 3; // sizeof("%s": )
+        let (size, remote) = self.ty.weight(&self.attributes);
+        (size + wrapper_len, remote)
     }
 }
 
@@ -85,7 +91,7 @@ impl Parse for Field {
             ident: input.parse()?,
             tok_col: input.parse()?,
             ty: input.parse()?,
-            attributes,
+            attributes: attributes.into(),
         })
     }
 }
@@ -94,6 +100,7 @@ impl ToTokens for Field {
     fn to_tokens(&self, toks: &mut TokenStream) {
         // We consume all the /// data: attributes but leave other doc comments
         self.attributes
+            .0
             .iter()
             .filter_map(|attr| attr.ignore())
             .for_each(|meta| meta.to_tokens(toks));
@@ -117,20 +124,32 @@ pub enum FieldType {
 }
 
 impl FieldType {
-    pub fn stackify(&mut self, attributes: &Vec<Attribute>) {
+    pub fn weight<'a>(&'a self, attrs: &Attributes) -> (usize, Option<&'a PathNamed>) {
+        match self {
+            FieldType::Primative(p) if p == "bool" => (5, None), // sizeof(false)
+            FieldType::Primative(p) if p == "u8" => (3, None),   // sizeof(255)
+            FieldType::Primative(p) if p == "i8" => (4, None),   // sizeof(-128)
+            FieldType::Primative(p) if p == "u16" => (5, None),  // sizeof(65536)
+            FieldType::Primative(p) if p == "i16" => (6, None),  // sizeof(-32768)
+            FieldType::Primative(p) if p == "u32" => (10, None), // sizeof(4294967296)
+            FieldType::Primative(p) if p == "i32" => (11, None), // sizeof(-2147483648)
+            FieldType::RefStr(_) => (attrs.seek_len() + 2, None), // sizeof("%s")
+            _ => (0, None),
+        }
+    }
+
+    pub fn stackify(&mut self, attr: &Attributes) {
         use FieldType::*;
         match self {
             RefStr(FieldTypeRef { ident, .. }) => {
                 let span = ident.span().clone();
-                let len: LitInt = attributes
-                    .iter()
-                    .find_map(|attr| attr.len())
-                    .map(|len| len.clone())
+                let len = attr
+                    .seek_len_lit()
                     .unwrap_or_else(|| LitInt::new("0", span.clone()));
                 *self = FieldType::Array(syn::parse_quote! {[u8;#len]});
             }
             Array(FieldTypeArray { ty, .. }) => {
-                ty.stackify(attributes);
+                ty.stackify(attr);
             }
             Struct(p) => {
                 p.stackify();

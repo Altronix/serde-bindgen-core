@@ -26,7 +26,7 @@ fn can_parse_field_opt_bool_true() {
         /// sbc: default = true
         id: bool
     );
-    let lit: syn::LitBool = attr.attributes[0].default().unwrap().parse().unwrap();
+    let lit: syn::LitBool = attr.attributes.0[0].default().unwrap().parse().unwrap();
     assert_eq!(lit.value(), true);
 }
 
@@ -36,7 +36,7 @@ fn can_parse_field_opt_bool_false() {
         /// sbc: default = false
         id: bool
     );
-    let lit: syn::LitBool = attr.attributes[0].default().unwrap().parse().unwrap();
+    let lit: syn::LitBool = attr.attributes.0[0].default().unwrap().parse().unwrap();
     assert_eq!(lit.value(), false);
 }
 
@@ -47,8 +47,8 @@ fn can_parse_field_opt_str() {
         /// sbc: len = 3
         id: &'a str
     );
-    let init: syn::LitStr = attr.attributes[0].default().unwrap().parse().unwrap();
-    let len = attr.attributes[1].len().unwrap();
+    let init: syn::LitStr = attr.attributes.0[0].default().unwrap().parse().unwrap();
+    let len = attr.attributes.0[1].len().unwrap();
     assert_eq!(init.value(), "hello");
     assert_eq!(len.base10_digits().parse::<i32>().unwrap(), 3);
 }
@@ -59,7 +59,7 @@ fn can_parse_field_opt_int() {
         /// sbc: default = 42
         id: u8
     );
-    let init: syn::LitInt = attr.attributes[0].default().unwrap().parse().unwrap();
+    let init: syn::LitInt = attr.attributes.0[0].default().unwrap().parse().unwrap();
     assert_eq!(init.base10_digits(), "42");
 }
 

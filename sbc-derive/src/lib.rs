@@ -50,6 +50,9 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     // create an "owned" version of the struct. (no references)
     let owned = ctx.clone().into_owned();
 
+    // create a const FOO: usize = max_len block
+    let impl_weight = ctx.impl_weight();
+
     // create impl Default block
     let impl_default = ctx.impl_default();
 
@@ -70,6 +73,8 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // render all the new items
     let quoted = quote! {
+        #[no_mangle]
+        #impl_weight
         #[repr(C)]
         #[derive(serde::Deserialize)]
         #[derive(serde::Serialize)]

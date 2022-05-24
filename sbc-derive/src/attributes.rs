@@ -87,10 +87,6 @@ impl Attribute {
             .filter(|meta| meta.meta.key == "len")
             .map(|meta| &meta.meta.val)
             .and_then(|val| val.parse().ok())
-        // match lit {
-        //     Some(DefaultLit(syn::Lit::Int(i))) => Some(i),
-        //     _ => None,
-        // }
     }
 }
 
@@ -219,5 +215,38 @@ impl Parse for DefaultLit {
 impl ToTokens for DefaultLit {
     fn to_tokens(&self, toks: &mut TokenStream) {
         self.0.to_tokens(toks);
+    }
+}
+
+#[derive(Clone)]
+#[cfg_attr(feature = "testing", derive(Debug))]
+pub struct Attributes(pub Vec<Attribute>);
+impl Attributes {
+    /// Helper to look through an array of attributes and find a "length" prop
+    pub fn seek_len_lit(&self) -> Option<syn::LitInt> {
+        self.0.iter().find_map(|attr| attr.len())
+    }
+
+    /// Helper to look through an array of attributes and find a "length" prop and convert to usize
+    pub fn seek_len(&self) -> usize {
+        self.seek_len_lit()
+            .and_then(|lit| lit.base10_digits().parse().ok())
+            .unwrap_or(0)
+    }
+
+    pub fn seek_default(&self) -> Option<&DefaultLit> {
+        self.0.iter().find_map(|attr| attr.default())
+    }
+}
+
+impl From<Vec<Attribute>> for Attributes {
+    fn from(vec: Vec<Attribute>) -> Attributes {
+        Attributes(vec)
+    }
+}
+
+impl From<Attributes> for Vec<Attribute> {
+    fn from(attr: Attributes) -> Vec<Attribute> {
+        attr.0
     }
 }

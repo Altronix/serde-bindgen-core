@@ -27,7 +27,7 @@ use syn::punctuated::Punctuated;
 use syn::Token;
 
 // heck::
-use heck::AsSnakeCase;
+use heck::{AsShoutySnakeCase, AsSnakeCase};
 
 // proc_macro2
 use proc_macro2::TokenStream;
@@ -46,6 +46,21 @@ pub(crate) struct Context {
 }
 
 impl Context {
+    pub fn weight<'a>(&'a self) -> (usize, Vec<&'a PathNamed>) {
+        // start with size of 2 for {} brackets
+        let (mut len, remotes) = self.fields.iter().map(|field| field.weight()).fold(
+            (2, Vec::new()),
+            |(acc_len, mut acc_vec), (len, remote)| {
+                if let Some(remote) = remote {
+                    acc_vec.push(remote)
+                }
+                (acc_len + len, acc_vec)
+            },
+        );
+        len += self.fields.len() - 1; // add a comma per field except the last
+        (len, remotes)
+    }
+
     pub fn stackify(&mut self) {
         self.path.stackify();
         self.fields.iter_mut().for_each(|f| f.stackify());
@@ -62,6 +77,11 @@ impl Context {
 
     pub fn impl_default(&self) -> ImplDefault {
         ImplDefault::new(&self.path, &self.fields)
+    }
+
+    pub fn impl_weight(&self) -> ImplWeight {
+        let (weight, remotes) = self.weight();
+        ImplWeight::new(&self.path, weight, remotes)
     }
 
     pub fn binding_copy<'a>(&'a self, prefix: &'a str) -> BindingCopy<'a> {
@@ -131,6 +151,39 @@ impl<'a> ToTokens for ImplDefault<'a> {
                     }
                 }
             }
+        }
+        .to_tokens(toks);
+    }
+}
+
+pub struct ImplWeight<'a> {
+    pub path: &'a PathNamed,
+    pub weight: usize,
+    pub remotes: Vec<&'a PathNamed>,
+}
+
+impl<'a> ImplWeight<'a> {
+    pub fn new(path: &'a PathNamed, weight: usize, remotes: Vec<&'a PathNamed>) -> ImplWeight<'a> {
+        ImplWeight {
+            path,
+            weight,
+            remotes,
+        }
+    }
+}
+
+impl<'a> ToTokens for ImplWeight<'a> {
+    fn to_tokens(&self, toks: &mut TokenStream) {
+        let weight = self.weight;
+        let (_other, mut ident) = self.path.split_self_for_impl();
+        ident
+            .rename(&format!(
+                "{}_MAX_LEN",
+                AsShoutySnakeCase(format!("{}", ident.ident))
+            ))
+            .strip_generics();
+        quote! {
+            const #ident: usize = #weight;
         }
         .to_tokens(toks);
     }
