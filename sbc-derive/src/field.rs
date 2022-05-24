@@ -73,7 +73,7 @@ impl Field {
         quote! {#name: #assignment}
     }
 
-    pub fn weight<'a>(&'a self) -> (usize, Option<&'a PathNamed>) {
+    pub fn weight<'a>(&'a self) -> (usize, Option<(&'a PathNamed, usize)>) {
         let wrapper_len = self.ident.to_string().len() + 3; // sizeof("%s": )
         let (size, remote) = self.ty.weight(&self.attributes);
         (size + wrapper_len, remote)
@@ -124,7 +124,7 @@ pub enum FieldType {
 }
 
 impl FieldType {
-    pub fn weight<'a>(&'a self, attrs: &Attributes) -> (usize, Option<&'a PathNamed>) {
+    pub fn weight<'a>(&'a self, attrs: &Attributes) -> (usize, Option<(&'a PathNamed, usize)>) {
         match self {
             FieldType::Primative(p) if p == "bool" => (5, None), // sizeof(false)
             FieldType::Primative(p) if p == "u8" => (3, None),   // sizeof(255)
@@ -134,8 +134,16 @@ impl FieldType {
             FieldType::Primative(p) if p == "u32" => (10, None), // sizeof(4294967296)
             FieldType::Primative(p) if p == "i32" => (11, None), // sizeof(-2147483648)
             FieldType::RefStr(_) => (attrs.seek_len() + 2, None), // sizeof("%s")
-            FieldType::Struct(p) => (0, Some(p)),
-            _ => (0, None),
+            FieldType::Struct(p) => (0, Some((p, 1))),
+            FieldType::Array(arr) => {
+                let n = arr.n.base10_digits().parse().unwrap_or(0);
+                let wrap = if n > 0 { n - 1 + 2 } else { 2 }; // 1 per comma except last (n-1), + []
+                match arr.ty.weight(attrs) {
+                    (size, Some((remote, count))) => (size * n + wrap, Some((remote, count * n))),
+                    (size, None) => (size * n + wrap, None),
+                }
+            }
+            _ => unimplemented!(),
         }
     }
 

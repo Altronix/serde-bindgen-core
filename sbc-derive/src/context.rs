@@ -46,7 +46,7 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    pub fn weight<'a>(&'a self) -> (usize, Vec<&'a PathNamed>) {
+    pub fn weight<'a>(&'a self) -> (usize, Vec<(&'a PathNamed, usize)>) {
         // start with size of 2 for {} brackets
         let (mut len, remotes) = self.fields.iter().map(|field| field.weight()).fold(
             (2, Vec::new()),
@@ -159,11 +159,15 @@ impl<'a> ToTokens for ImplDefault<'a> {
 pub struct ImplWeight<'a> {
     pub path: &'a PathNamed,
     pub weight: usize,
-    pub remotes: Vec<&'a PathNamed>,
+    pub remotes: Vec<(&'a PathNamed, usize)>,
 }
 
 impl<'a> ImplWeight<'a> {
-    pub fn new(path: &'a PathNamed, weight: usize, remotes: Vec<&'a PathNamed>) -> ImplWeight<'a> {
+    pub fn new(
+        path: &'a PathNamed,
+        weight: usize,
+        remotes: Vec<(&'a PathNamed, usize)>,
+    ) -> ImplWeight<'a> {
         ImplWeight {
             path,
             weight,
@@ -179,8 +183,8 @@ impl<'a> ToTokens for ImplWeight<'a> {
         let remotes = self
             .remotes
             .iter()
-            .map(|remote| (*remote).clone().into_shouty_max_len())
-            .fold(None, |acc, next| Some(quote! {#acc + #next}));
+            .map(|(remote, n)| ((*remote).clone().into_shouty_max_len(), n))
+            .fold(None, |acc, (remote, n)| Some(quote! {#acc + #remote * #n}));
         ident = ident.clone().into_shouty_max_len();
         quote! {
             pub const #ident: usize = #weight #remotes;

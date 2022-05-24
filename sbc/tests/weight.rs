@@ -21,6 +21,7 @@ pub struct Foo<'a> {
     id7: &'a str,
     id8: Remote<'a>,
     id9: Remote<'a>,
+    id10: [u8; 3],
 }
 
 const DATA: &'static str = r#"
@@ -33,15 +34,13 @@ const DATA: &'static str = r#"
     "id5": -2147483647,
     "id6": false,
     "id7": "12345",
-    "id8": {
-      "id0": "1234"
-    },
-    "id9": {
-      "id0": "5678"
-    }
+    "id8": {"id0": "1234"},
+    "id9": {"id0": "5678"},
+    "id10": [255,255,255]
 }
 "#;
 
+//"id10": [{"id0": "1234"},{"id0":"5678"}]
 #[test]
 fn can_calculate_weight() {
     let mut foo = std::mem::MaybeUninit::<Foo>::uninit();
