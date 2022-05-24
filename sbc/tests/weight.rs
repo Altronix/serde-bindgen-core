@@ -19,7 +19,8 @@ pub struct Foo<'a> {
     id6: bool,
     /// sbc: len = 5
     id7: &'a str,
-    id8: Remote<'a>
+    id8: Remote<'a>,
+    id9: Remote<'a>,
 }
 
 const DATA: &'static str = r#"
@@ -34,6 +35,9 @@ const DATA: &'static str = r#"
     "id7": "12345",
     "id8": {
       "id0": "1234"
+    },
+    "id9": {
+      "id0": "5678"
     }
 }
 "#;
