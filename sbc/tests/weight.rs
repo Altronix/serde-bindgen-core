@@ -22,6 +22,7 @@ pub struct Foo<'a> {
     id8: Remote<'a>,
     id9: Remote<'a>,
     id10: [u8; 3],
+    id11: [Remote<'a>; 3],
 }
 
 const DATA: &'static str = r#"
@@ -36,7 +37,8 @@ const DATA: &'static str = r#"
     "id7": "12345",
     "id8": {"id0": "1234"},
     "id9": {"id0": "5678"},
-    "id10": [255,255,255]
+    "id10": [255,255,255],
+    "id11": [{"id0": "1234"},{"id0": "1234"},{"id0": "1234"}]
 }
 "#;
 
