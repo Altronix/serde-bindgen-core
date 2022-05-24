@@ -45,7 +45,6 @@ const DATA: &'static str = r#"
 }
 "#;
 
-//"id10": [{"id0": "1234"},{"id0":"5678"}]
 #[test]
 fn can_calculate_weight() {
     let mut foo = std::mem::MaybeUninit::<Foo>::uninit();
