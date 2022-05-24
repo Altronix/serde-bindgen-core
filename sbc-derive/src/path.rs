@@ -62,6 +62,19 @@ impl PathNamed {
         self
     }
 
+    pub fn parsify(&mut self) -> &mut Self {
+        self.rename(&format!("{}", self.ident));
+        self
+    }
+
+    pub fn into_split(self) -> (Self, Self) {
+        let mut owned = self.clone();
+        let mut parse = self.clone();
+        owned.stackify();
+        parse.parsify();
+        (owned, parse)
+    }
+
     pub fn rename(&mut self, name: &str) -> &mut Self {
         self.ident = Ident::new(name, self.ident.span());
         self

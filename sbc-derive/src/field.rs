@@ -126,8 +126,8 @@ impl FieldType {
     pub fn stackify(&mut self, attributes: &Vec<Attribute>) {
         use FieldType::*;
         match self {
-            RefStr(FieldTypeRef { .. }) => {
-                let span = proc_macro2::Span::call_site();
+            RefStr(FieldTypeRef { ident, .. }) => {
+                let span = ident.span().clone();
                 let len: LitInt = attributes
                     .iter()
                     .find_map(|attr| attr.len())

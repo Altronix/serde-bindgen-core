@@ -151,16 +151,13 @@ impl<'a> ImplFrom<'a> {
 
 impl<'a> ToTokens for ImplFrom<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let mut ident = self.path.clone();
-        let mut other = self.path.clone();
-        let (impl_generics, ty_generics, where_clause) = self.path.split_for_impl();
+        let (other,ident) = self.path.clone().into_split();
+        let (impl_generics, _ty_generics, where_clause) = self.path.split_for_impl();
         let var = quote::format_ident!("s");
-        other.stackify();
-        ident.strip_generics();
         let from_tokens = self.fields.iter().map(|field| field.from_tokens(&var));
         quote! {
-            impl #impl_generics From<&#ident #ty_generics> for #other #where_clause {
-                fn from(s: &#ident #ty_generics) -> #other {
+            impl #impl_generics From<&#ident> for #other #where_clause {
+                fn from(s: &#ident) -> #other {
                     #other {
                         #(#from_tokens),*
                     }
@@ -184,16 +181,13 @@ impl<'a> BindingDefault<'a> {
 
 impl<'a> ToTokens for BindingDefault<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let ident = &self.ident;
+        let (owned, ident) = self.ident.clone().into_split();
         let (impl_generics, _, _) = ident.split_for_impl();
-        let mut owned = self.ident.clone();
-        owned.stackify();
-        let id = format!(
+        let name_fn = quote::format_ident!(
             "{}_init_{}",
             self.prefix,
-            AsSnakeCase(format!("{}", ident.ident))
+            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
         );
-        let name_fn = quote::format_ident!("{}", id);
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(dst: &mut #owned)  {
@@ -217,16 +211,13 @@ impl<'a> BindingCopy<'a> {
 
 impl<'a> ToTokens for BindingCopy<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let ident = &self.ident;
+        let (owned, ident) = self.ident.clone().into_split();
         let (impl_generics, _, _) = ident.split_for_impl();
-        let mut owned = self.ident.clone();
-        owned.stackify();
-        let id = format!(
+        let name_fn = quote::format_ident!(
             "{}_copy_{}",
             self.prefix,
-            AsSnakeCase(format!("{}", ident.ident))
+            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
         );
-        let name_fn = quote::format_ident!("{}", id);
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(dst: &mut #owned, src: &#ident)  {
@@ -250,16 +241,13 @@ impl<'a> BindingParse<'a> {
 
 impl<'a> ToTokens for BindingParse<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let ident = &self.ident;
+        let (_owned, ident) = self.ident.clone().into_split();
         let (impl_generics, _, _) = ident.split_for_impl();
-        let mut owned = self.ident.clone();
-        owned.stackify();
-        let id = format!(
+        let name_fn = quote::format_ident!(
             "{}_parse_{}",
             self.prefix,
-            AsSnakeCase(format!("{}", ident.ident))
+            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
         );
-        let name_fn = quote::format_ident!("{}", id);
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(dst: &mut #ident, bytes: *const u8, len: usize) -> i32 {
@@ -290,16 +278,13 @@ impl<'a> BindingPrint<'a> {
 
 impl<'a> ToTokens for BindingPrint<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let ident = &self.ident;
+        let (_owned, ident) = self.ident.clone().into_split();
         let (impl_generics, _, _) = ident.split_for_impl();
-        let mut owned = self.ident.clone();
-        owned.stackify();
-        let id = format!(
+        let name_fn = quote::format_ident!(
             "{}_print_{}",
             self.prefix,
-            AsSnakeCase(format!("{}", ident.ident))
+            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
         );
-        let name_fn = quote::format_ident!("{}", id);
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(data: &#ident, bytes: *mut u8, len: &mut usize) -> i32 {
