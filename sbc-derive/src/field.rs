@@ -28,6 +28,7 @@
 
 // syn::
 use syn::parse::{Error, Parse, ParseStream, Result};
+use syn::parse_quote;
 use syn::punctuated::Punctuated;
 use syn::token::Bracket;
 use syn::Ident;
@@ -59,6 +60,10 @@ impl Field {
         self.ty.as_owned(&self.attributes);
     }
 
+    pub fn as_borrowed(&mut self, lifetime:Option<&syn::Lifetime>) {
+        self.ty.as_borrowed(lifetime);
+    }
+
     pub fn assignment_tokens(&self) -> TokenStream {
         let name = &self.ident;
         let init = self.attributes.seek_default();
@@ -69,14 +74,14 @@ impl Field {
     pub fn from_owned_tokens(&self, var: &Ident) -> TokenStream {
         let name = &self.ident;
         let expr = quote! {#var.#name};
-        let assignment = self.ty.from_owned_tokens(&syn::parse_quote! {#expr});
+        let assignment = self.ty.from_owned_tokens(&parse_quote! {#expr});
         quote! {#name: #assignment}
     }
 
     pub fn from_ref_tokens(&self, var: &Ident) -> TokenStream {
         let name = &self.ident;
         let expr = quote! {#var.#name};
-        let assignment = self.ty.from_ref_tokens(&syn::parse_quote! {#expr});
+        let assignment = self.ty.from_ref_tokens(&parse_quote! {#expr});
         quote! {#name: #assignment}
     }
 
@@ -155,22 +160,35 @@ impl FieldType {
     }
 
     pub fn as_owned(&mut self, attr: &Attributes) {
-        use FieldType::*;
         match self {
-            RefStr(FieldTypeRef { ident, .. }) => {
+            FieldType::RefStr(FieldTypeRef { ident, .. }) => {
                 let span = ident.span().clone();
                 let len = attr
                     .seek_len_lit()
                     .unwrap_or_else(|| LitInt::new("0", span.clone()));
-                *self = FieldType::Array(syn::parse_quote! {[u8;#len]});
+                *self = FieldType::Array(parse_quote! {[u8;#len]});
             }
-            Array(FieldTypeArray { ty, .. }) => {
+            FieldType::Array(FieldTypeArray { ty, .. }) => {
                 ty.as_owned(attr);
             }
-            Struct(p) => {
+            FieldType::Struct(p) => {
                 p.as_owned();
             }
+            _ => {}
+        }
+    }
 
+    pub fn as_borrowed(&mut self, lifetime: Option<&syn::Lifetime>) {
+        match self {
+            FieldType::Array(FieldTypeArray { ty, .. }) => match &**ty {
+                FieldType::Primative(i) if i == "u8" => {
+                    *self = FieldType::RefStr(parse_quote! {&#lifetime str});
+                }
+                _ => {}
+            },
+            FieldType::Struct(p) => {
+                p.as_borrowed();
+            }
             _ => {}
         }
     }
