@@ -209,7 +209,10 @@ impl<'a> ToTokens for ImplFrom<'a> {
         let (other, ident) = self.path.split_self_for_impl();
         let (impl_generics, _ty_generics, where_clause) = self.path.split_generics_for_impl();
         let var = quote::format_ident!("s");
-        let from_tokens = self.fields.iter().map(|field| field.from_tokens(&var));
+        let from_tokens = self
+            .fields
+            .iter()
+            .map(|field| field.from_owned_tokens(&var));
         quote! {
             impl #impl_generics From<&#ident> for #other #where_clause {
                 fn from(s: &#ident) -> #other {

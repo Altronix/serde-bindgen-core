@@ -66,10 +66,10 @@ impl Field {
         quote! {#name: #assignment}
     }
 
-    pub fn from_tokens(&self, var: &Ident) -> TokenStream {
+    pub fn from_owned_tokens(&self, var: &Ident) -> TokenStream {
         let name = &self.ident;
         let expr = quote! {#var.#name};
-        let assignment = self.ty.from_tokens(&syn::parse_quote! {#expr});
+        let assignment = self.ty.from_owned_tokens(&syn::parse_quote! {#expr});
         quote! {#name: #assignment}
     }
 
@@ -183,7 +183,7 @@ impl FieldType {
         }
     }
 
-    pub fn from_tokens(&self, expr: &TokenStream) -> TokenStream {
+    pub fn from_owned_tokens(&self, expr: &TokenStream) -> TokenStream {
         match &self {
             FieldType::RefStr(_) => quote! {serde_bindgen_core::SafeCopy::safe_copy(&#expr)},
             FieldType::Struct(_) => quote! {From::from(&#expr)},
@@ -191,7 +191,7 @@ impl FieldType {
             FieldType::Array(a) => a.surround(|n| {
                 let i = LitInt::new(&n.to_string(), a.n.span()).token();
                 let expr = quote! {#expr[#i]};
-                a.ty.from_tokens(&expr)
+                a.ty.from_owned_tokens(&expr)
             }),
         }
     }

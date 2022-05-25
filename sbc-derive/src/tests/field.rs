@@ -209,64 +209,64 @@ fn can_assignment_tokens_array_prim_recursive() {
 }
 
 #[test]
-fn can_from_tokens_ref_str() {
+fn can_from_owned_tokens_ref_str() {
     let sample: Field = parse_quote!(
       /// sbc: default = "initial foo"
       pub foo: &'a str
     );
     let var = quote::format_ident!("s");
     let expect = quote::quote!(foo: serde_bindgen_core::SafeCopy::safe_copy(&s.foo));
-    let quoted = sample.from_tokens(&var);
+    let quoted = sample.from_owned_tokens(&var);
     assert_eq!(expect.to_string(), quoted.to_string());
 }
 
 #[test]
-fn can_from_tokens_nested_struct() {
+fn can_from_owned_tokens_nested_struct() {
     let sample: Field = parse_quote!(pub foo: Baz<'a>);
     let var = quote::format_ident!("s");
     let expect = quote::quote!(foo: From::from(&s.foo));
-    let quoted = sample.from_tokens(&var);
+    let quoted = sample.from_owned_tokens(&var);
     assert_eq!(expect.to_string(), quoted.to_string());
 }
 
 #[test]
-fn can_from_tokens_bool() {
+fn can_from_owned_tokens_bool() {
     let sample: Field = parse_quote!(
        /// sbc: default = true
        pub foo: bool
     );
     let var = quote::format_ident!("s");
     let expect = quote::quote!(foo: s.foo);
-    let quoted = sample.from_tokens(&var);
+    let quoted = sample.from_owned_tokens(&var);
     assert_eq!(expect.to_string(), quoted.to_string());
 }
 
 #[test]
-fn can_from_tokens_int() {
+fn can_from_owned_tokens_int() {
     let sample: Field = parse_quote!(
       /// sbc: default = 42
       pub foo: u8
     );
     let var = quote::format_ident!("s");
     let expect = quote::quote!(foo: s.foo);
-    let quoted = sample.from_tokens(&var);
+    let quoted = sample.from_owned_tokens(&var);
     assert_eq!(expect.to_string(), quoted.to_string());
 }
 
 #[test]
-fn can_from_tokens_array_struct() {
+fn can_from_owned_tokens_array_struct() {
     let sample: Field = parse_quote!(foo: [Baz<'a>; 2]);
     let var = quote::format_ident!("s");
     let expect = quote::quote!(foo: [From::from(&s.foo[0]),From::from(&s.foo[1])]);
-    let quoted = sample.from_tokens(&var);
+    let quoted = sample.from_owned_tokens(&var);
     assert_eq!(expect.to_string(), quoted.to_string());
 }
 
 #[test]
-fn can_from_tokens_array_prim() {
+fn can_from_owned_tokens_array_prim() {
     let sample: Field = parse_quote!(foo: [u8; 2]);
     let var = quote::format_ident!("s");
     let expect = quote::quote!(foo: [s.foo[0], s.foo[1]]);
-    let quoted = sample.from_tokens(&var);
+    let quoted = sample.from_owned_tokens(&var);
     assert_eq!(expect.to_string(), quoted.to_string());
 }
