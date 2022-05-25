@@ -298,6 +298,76 @@ fn can_print() {
     let printed = unsafe { printed.assume_init() };
     assert_eq!(ret, l as i32);
     assert_parsed(&printed);
+
+}
+
+#[test]
+fn can_print_owned() {
+    let mut owned = std::mem::MaybeUninit::<JingleBellsOwned>::uninit();
+    unsafe { test_copy_jingle_bells(&mut *owned.as_mut_ptr(), &ROOT) };
+    let owned = unsafe { owned.assume_init() };
+
+    // print some bytes
+    let mut bytes: [u8; 4096] = [0; 4096];
+    let mut l = 4096;
+    let ret = unsafe { test_print_jingle_bells_owned(&owned, bytes.as_mut_ptr(), &mut l) };
+    assert_eq!(ret, 0);
+
+    // check readback
+    let mut printed = std::mem::MaybeUninit::<JingleBells>::uninit();
+    let ret = unsafe { test_parse_jingle_bells(&mut *printed.as_mut_ptr(), bytes.as_ptr(), l) };
+    let printed = unsafe { printed.assume_init() };
+    assert_eq!(ret, l as i32);
+    // almost identical assertsions as assert_parsed, except we owned data parsing
+    // looses bytes due to size limits, where as referenced data parsing will reference into
+    // any sized string. (Basically printed.b11 is a "" instead of "apple")
+    assert_eq!(printed.b0, "b0");
+    assert_eq!(printed.b1, 0);
+    assert_eq!(printed.b2, [1, 2, 3]);
+    assert_eq!(printed.b3, [true, false, false, false]);
+    assert_eq!(printed.b4.b0, "b4.b0");
+    assert_eq!(printed.b4.b1, 4);
+    assert_eq!(printed.b4.b2, [5, 6, 7]);
+    assert_eq!(printed.b4.b3, [false, true, false, false]);
+    assert_eq!(printed.b5[0].b0, "b5[0].b0");
+    assert_eq!(printed.b5[0].b1, 8);
+    assert_eq!(printed.b5[0].b2, [9, 10, 11]);
+    assert_eq!(printed.b5[0].b3, [false, false, true, false]);
+    assert_eq!(printed.b5[1].b0, "b5[1].b0");
+    assert_eq!(printed.b5[1].b1, 12);
+    assert_eq!(printed.b5[1].b2, [13, 14, 15]);
+    assert_eq!(printed.b5[1].b3, [false, false, false, true]);
+    assert_eq!(printed.b5[2].b0, "b5[2].b0");
+    assert_eq!(printed.b5[2].b1, 16);
+    assert_eq!(printed.b5[2].b2, [17, 18, 19]);
+    assert_eq!(printed.b5[2].b3, [true, false, false, false]);
+    assert_eq!(printed.b6.b0, "b6.b0");
+    assert_eq!(printed.b6.b1, 20);
+    assert_eq!(printed.b6.b2, [21, 22, 23]);
+    assert_eq!(printed.b6.b3, [false, true, false, false]);
+    assert_eq!(printed.b7[0].b0, "b7[0].b0");
+    assert_eq!(printed.b7[0].b1, 24);
+    assert_eq!(printed.b7[0].b2, [25, 26, 27]);
+    assert_eq!(printed.b7[0].b3, [false, false, true, false]);
+    assert_eq!(printed.b7[1].b0, "b7[1].b0");
+    assert_eq!(printed.b7[1].b1, 28);
+    assert_eq!(printed.b7[1].b2, [29, 30, 31]);
+    assert_eq!(printed.b7[1].b3, [false, false, false, true]);
+    assert_eq!(printed.b7[2].b0, "b7[2].b0");
+    assert_eq!(printed.b7[2].b1, 32);
+    assert_eq!(printed.b7[2].b2, [33, 34, 35]);
+    assert_eq!(printed.b7[2].b3, [true, false, false, false]);
+    assert_eq!(printed.b8[0], "apple");
+    assert_eq!(printed.b8[1], "banana");
+    assert_eq!(printed.b8[2], "car");
+    assert_eq!(printed.b9[0][0], "apple");
+    assert_eq!(printed.b9[0][1], "banana");
+    assert_eq!(printed.b9[0][2], "car");
+    assert_eq!(printed.b9[1][0], "apple");
+    assert_eq!(printed.b9[1][1], "banana");
+    assert_eq!(printed.b9[1][2], "car");
+    assert_eq!(printed.b10, [36, 37, 38]);
+    assert_eq!(printed.b11, "");
 }
 
 #[test]
@@ -389,9 +459,4 @@ fn can_copy_into_owned() {
     assert_eq!(stringify!(&owned.b9[1][2]), "car");
     assert_eq!(owned.b10, [36, 37, 38]);
     assert_eq!(owned.b11, []);
-}
-
-#[test]
-fn can_reference_owned() {
-  //let mut owned = std::mem::
 }

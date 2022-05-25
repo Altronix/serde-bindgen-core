@@ -205,7 +205,9 @@ impl FieldType {
 
     pub fn from_ref_tokens(&self, expr: &TokenStream) -> TokenStream {
         match &self {
-            FieldType::RefStr(_) => quote! {core::str::from_utf8(#expr.as_slice()).unwrap_or("")},
+            FieldType::RefStr(_) => {
+                quote! {core::str::from_utf8(#expr.as_slice()).unwrap_or("").trim_end_matches(char::from(0))}
+            }
             FieldType::Struct(_) => quote! {From::from(&#expr)},
             FieldType::Primative(_) => quote! {#expr},
             FieldType::Array(a) => a.surround(|n| {

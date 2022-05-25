@@ -70,6 +70,9 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     // create binding for parse function
     let binding_print = ctx.binding_print(&prefix);
 
+    // create binding for parse function
+    let binding_print_owned = ctx.binding_print_owned(&prefix);
+
     // render all the new items
     let quoted = quote! {
         #[no_mangle]
@@ -88,6 +91,7 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
         #binding_init
         #binding_parse
         #binding_print
+        #binding_print_owned
     };
     proc_macro::TokenStream::from(quoted)
 }

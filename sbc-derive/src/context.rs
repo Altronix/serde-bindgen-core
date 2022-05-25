@@ -103,6 +103,10 @@ impl Context {
     pub fn binding_print<'a>(&'a self, prefix: &'a str) -> BindingPrint<'a> {
         BindingPrint::new(prefix, &self.path)
     }
+
+    pub fn binding_print_owned<'a>(&'a self, prefix: &'a str) -> BindingPrintOwned<'a> {
+        BindingPrintOwned::new(prefix, &self.path)
+    }
 }
 
 impl Parse for Context {
@@ -385,6 +389,45 @@ impl<'a> ToTokens for BindingPrint<'a> {
             pub extern "C" fn #name_fn #impl_generics(data: &#ident, bytes: *mut u8, len: &mut usize) -> i32 {
                 let mut slice = unsafe { core::slice::from_raw_parts_mut(bytes, *len) };
                 match serde_json_core::to_slice(data, &mut slice) {
+                    Ok(l)=> {
+                        *len = l;
+                        0
+                    },
+                    Err(_) => -1
+                }
+            }
+        }
+        .to_tokens(toks);
+    }
+}
+
+pub struct BindingPrintOwned<'a> {
+    ident: &'a PathNamed,
+    prefix: &'a str,
+}
+
+impl<'a> BindingPrintOwned<'a> {
+    fn new(prefix: &'a str, ident: &'a PathNamed) -> BindingPrintOwned<'a> {
+        BindingPrintOwned { ident, prefix }
+    }
+}
+
+impl<'a> ToTokens for BindingPrintOwned<'a> {
+    fn to_tokens(&self, toks: &mut TokenStream) {
+        let (owned, ident) = self.ident.split_self_for_impl();
+        let (impl_generics, _, _) = self.ident.split_generics_for_impl();
+        let lifetime = self.ident.lifetime();
+        let name_fn = quote::format_ident!(
+            "{}_print_{}_owned",
+            self.prefix,
+            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
+        );
+        quote! {
+            #[no_mangle]
+            pub extern "C" fn #name_fn #impl_generics(data: &#lifetime #owned, bytes: *mut u8, len: &#lifetime mut usize) -> i32 {
+                let mut slice = unsafe { core::slice::from_raw_parts_mut(bytes, *len) };
+                let data: #ident = data.into();
+                match serde_json_core::to_slice(&data, &mut slice) {
                     Ok(l)=> {
                         *len = l;
                         0
