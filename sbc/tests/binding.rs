@@ -290,7 +290,7 @@ fn can_print() {
     // Print test data
     let mut bytes: [u8; 2048] = [0; 2048];
     let mut l = 2048;
-    let ret = unsafe { test_print_jingle_bells(&ROOT, bytes.as_mut_ptr(), &mut l) };
+    let ret = unsafe { test_print_jingle_bells_borrowed(&ROOT, bytes.as_mut_ptr(), &mut l) };
 
     // Parse test data
     let mut printed = std::mem::MaybeUninit::<JingleBells>::uninit();

@@ -76,7 +76,7 @@ impl PathNamed {
     }
 
     pub fn as_borrowed(&mut self) -> &mut Self {
-        self.rename(&format!("{}", self.ident));
+        self.rename(&format!("{}Borrowed", self.ident));
         self
     }
 

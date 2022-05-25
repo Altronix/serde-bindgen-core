@@ -280,12 +280,12 @@ impl<'a> BindingDefault<'a> {
 
 impl<'a> ToTokens for BindingDefault<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_original, borrowed, owned) = self.ident.split_self_for_impl();
+        let (original, _borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_init_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
+            format!("{}", AsSnakeCase(format!("{}", original.ident)))
         );
         quote! {
             #[no_mangle]
@@ -310,12 +310,12 @@ impl<'a> BindingCopy<'a> {
 
 impl<'a> ToTokens for BindingCopy<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_original, borrowed, owned) = self.ident.split_self_for_impl();
+        let (original, borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_copy_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
+            format!("{}", AsSnakeCase(format!("{}", original.ident)))
         );
         quote! {
             #[no_mangle]
@@ -340,12 +340,12 @@ impl<'a> BindingParse<'a> {
 
 impl<'a> ToTokens for BindingParse<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_original, borrowed, _owned) = self.ident.split_self_for_impl();
+        let (original, borrowed, _owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_parse_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
+            format!("{}", AsSnakeCase(format!("{}", original.ident)))
         );
         quote! {
             #[no_mangle]

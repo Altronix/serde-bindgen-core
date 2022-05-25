@@ -204,8 +204,8 @@ fn can_impl_from() {
     );
     #[rustfmt::skip]
     let expect: syn::ItemImpl = parse_quote!(
-        impl<'a> From<&Foo<'a>> for FooOwned {
-            fn from(s: &Foo<'a>) -> FooOwned {
+        impl<'a> From<&FooBorrowed<'a>> for FooOwned {
+            fn from(s: &FooBorrowed<'a>) -> FooOwned {
                 FooOwned {
                     id0: serde_bindgen_core::SafeCopy::safe_copy(&s.id0),
                     id1: [s.id1[0],s.id1[1]],
@@ -249,7 +249,7 @@ fn can_binding_copy() {
     let binding = original.binding_copy("foo");
     let expect = quote::quote! {
         #[no_mangle]
-        pub extern "C" fn foo_copy_foo<'a>(dst: &mut FooOwned, src: &Foo<'a>) {
+        pub extern "C" fn foo_copy_foo<'a>(dst: &mut FooOwned, src: &FooBorrowed<'a>) {
             *dst = From::from(src);
         }
     };
@@ -267,7 +267,7 @@ fn can_binding_parse() {
     let binding = original.binding_parse("foo");
     let expect = quote::quote! {
         #[no_mangle]
-        pub extern "C" fn foo_parse_foo<'a>(dst: &mut Foo<'a>, bytes: *const u8, len: usize) -> i32 {
+        pub extern "C" fn foo_parse_foo<'a>(dst: &mut FooBorrowed<'a>, bytes: *const u8, len: usize) -> i32 {
             let slice = unsafe { core::slice::from_raw_parts(bytes,len) };
             match serde_json_core::from_slice(&slice) {
                 Ok((item,len)) => {
@@ -292,7 +292,7 @@ fn can_binding_print() {
     let binding = original.binding_print("foo");
     let expect = quote::quote! {
         #[no_mangle]
-        pub extern "C" fn foo_print_foo<'a>(data: &Foo<'a>, bytes: *mut u8, len: &mut usize) -> i32 {
+        pub extern "C" fn foo_print_foo_borrowed<'a>(data: &FooBorrowed<'a>, bytes: *mut u8, len: &mut usize) -> i32 {
             let mut slice = unsafe { core::slice::from_raw_parts_mut(bytes,*len) };
             match serde_json_core::to_slice(data, &mut slice) {
                 Ok(l) => {
