@@ -85,12 +85,13 @@ impl PathNamed {
         self
     }
 
-    pub fn split_self_for_impl(&self) -> (Self, Self) {
+    pub fn split_self_for_impl(&self) -> (Self, Self, Self) {
+        let original = self.clone();
         let mut owned = self.clone();
-        let mut parse = self.clone();
+        let mut borrowed = self.clone();
         owned.as_owned();
-        parse.as_borrowed();
-        (owned, parse)
+        borrowed.as_borrowed();
+        (original, borrowed, owned)
     }
 
     pub fn lifetime(&self) -> Option<&syn::Lifetime> {

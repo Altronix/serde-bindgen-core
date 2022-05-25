@@ -149,7 +149,7 @@ impl<'a> ImplDefault<'a> {
 
 impl<'a> ToTokens for ImplDefault<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (owned, _ident) = self.path.split_self_for_impl();
+        let (_original, _borrowed, owned) = self.path.split_self_for_impl();
         let assignment_tokens = self.fields.iter().map(|field| field.assignment_tokens());
         quote! {
             impl Default for #owned {
@@ -186,16 +186,16 @@ impl<'a> ImplWeight<'a> {
 
 impl<'a> ToTokens for ImplWeight<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_other, mut ident) = self.path.split_self_for_impl();
+        let (mut original, _borrowed, _owned) = self.path.split_self_for_impl();
         let weight = self.weight;
         let remotes = self
             .remotes
             .iter()
             .map(|(remote, n)| ((*remote).clone().into_shouty_max_len(), n))
             .fold(None, |acc, (remote, n)| Some(quote! {#acc + #remote * #n}));
-        ident = ident.clone().into_shouty_max_len();
+        original = original.clone().into_shouty_max_len();
         quote! {
-            pub const #ident: usize = #weight #remotes;
+            pub const #original: usize = #weight #remotes;
         }
         .to_tokens(toks);
     }
@@ -214,7 +214,7 @@ impl<'a> ImplFromRef<'a> {
 
 impl<'a> ToTokens for ImplFromRef<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (other, ident) = self.path.split_self_for_impl();
+        let (_original, borrowed, owned) = self.path.split_self_for_impl();
         let (impl_generics, _ty_generics, where_clause) = self.path.split_generics_for_impl();
         let var = quote::format_ident!("s");
         let from_tokens = self
@@ -222,9 +222,9 @@ impl<'a> ToTokens for ImplFromRef<'a> {
             .iter()
             .map(|field| field.from_owned_tokens(&var));
         quote! {
-            impl #impl_generics From<&#ident> for #other #where_clause {
-                fn from(s: &#ident) -> #other {
-                    #other {
+            impl #impl_generics From<&#borrowed> for #owned #where_clause {
+                fn from(s: &#borrowed) -> #owned {
+                    #owned {
                         #(#from_tokens),*
                     }
                 }
@@ -247,16 +247,16 @@ impl<'a> ImplFromOwned<'a> {
 
 impl<'a> ToTokens for ImplFromOwned<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (owned, ident) = self.path.split_self_for_impl();
+        let (_original, borrowed, owned) = self.path.split_self_for_impl();
         let (impl_generics, _ty_generics, where_clause) = self.path.split_generics_for_impl();
         let var = quote::format_ident!("s");
         let from_tokens = self.fields.iter().map(|field| field.from_ref_tokens(&var));
-        let lifetime = ident.lifetime();
-        let mut ret = ident.clone();
+        let lifetime = borrowed.lifetime();
+        let mut ret = borrowed.clone();
         ret.strip_generics();
         quote! {
-            impl #impl_generics From<&#lifetime #owned> for #ident #where_clause {
-                fn from(s: &#lifetime #owned) -> #ident {
+            impl #impl_generics From<&#lifetime #owned> for #borrowed #where_clause {
+                fn from(s: &#lifetime #owned) -> #borrowed {
                     #ret {
                         #(#from_tokens),*
                     }
@@ -280,12 +280,12 @@ impl<'a> BindingDefault<'a> {
 
 impl<'a> ToTokens for BindingDefault<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (owned, ident) = self.ident.split_self_for_impl();
+        let (_original, borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_init_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
+            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
         );
         quote! {
             #[no_mangle]
@@ -310,16 +310,16 @@ impl<'a> BindingCopy<'a> {
 
 impl<'a> ToTokens for BindingCopy<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (owned, ident) = self.ident.split_self_for_impl();
+        let (_original, borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_copy_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
+            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
         );
         quote! {
             #[no_mangle]
-            pub extern "C" fn #name_fn #impl_generics(dst: &mut #owned, src: &#ident)  {
+            pub extern "C" fn #name_fn #impl_generics(dst: &mut #owned, src: &#borrowed)  {
                 *dst = From::from(src);
             }
         }
@@ -340,16 +340,16 @@ impl<'a> BindingParse<'a> {
 
 impl<'a> ToTokens for BindingParse<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_owned, ident) = self.ident.split_self_for_impl();
+        let (_original, borrowed, _owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_parse_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
+            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
         );
         quote! {
             #[no_mangle]
-            pub extern "C" fn #name_fn #impl_generics(dst: &mut #ident, bytes: *const u8, len: usize) -> i32 {
+            pub extern "C" fn #name_fn #impl_generics(dst: &mut #borrowed, bytes: *const u8, len: usize) -> i32 {
                 let slice = unsafe { core::slice::from_raw_parts(bytes, len) };
                 match serde_json_core::from_slice(&slice) {
                     Ok((item, len))=> {
@@ -377,16 +377,16 @@ impl<'a> BindingPrint<'a> {
 
 impl<'a> ToTokens for BindingPrint<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (_owned, ident) = self.ident.split_self_for_impl();
+        let (_original, borrowed, _owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let name_fn = quote::format_ident!(
             "{}_print_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
+            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
         );
         quote! {
             #[no_mangle]
-            pub extern "C" fn #name_fn #impl_generics(data: &#ident, bytes: *mut u8, len: &mut usize) -> i32 {
+            pub extern "C" fn #name_fn #impl_generics(data: &#borrowed, bytes: *mut u8, len: &mut usize) -> i32 {
                 let mut slice = unsafe { core::slice::from_raw_parts_mut(bytes, *len) };
                 match serde_json_core::to_slice(data, &mut slice) {
                     Ok(l)=> {
@@ -414,19 +414,19 @@ impl<'a> BindingPrintOwned<'a> {
 
 impl<'a> ToTokens for BindingPrintOwned<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (owned, ident) = self.ident.split_self_for_impl();
+        let (_original, borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let lifetime = self.ident.lifetime();
         let name_fn = quote::format_ident!(
-            "{}_print_{}_owned",
+            "{}_print_{}",
             self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", ident.ident)))
+            format!("{}", AsSnakeCase(format!("{}", owned.ident)))
         );
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(data: &#lifetime #owned, bytes: *mut u8, len: &#lifetime mut usize) -> i32 {
                 let mut slice = unsafe { core::slice::from_raw_parts_mut(bytes, *len) };
-                let data: #ident = data.into();
+                let data: #borrowed = data.into();
                 match serde_json_core::to_slice(&data, &mut slice) {
                     Ok(l)=> {
                         *len = l;
