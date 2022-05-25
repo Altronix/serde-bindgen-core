@@ -64,6 +64,11 @@ impl PathNamed {
         self
     }
 
+    pub fn into_owned(mut self) -> Self {
+        self.as_owned();
+        self
+    }
+
     pub fn into_shouty_max_len(mut self) -> Self {
         let max_len = AsShoutySnakeCase(format!("{}_MAX_LEN", self.ident)).to_string();
         self.rename(&max_len).strip_generics();
@@ -72,6 +77,11 @@ impl PathNamed {
 
     pub fn as_borrowed(&mut self) -> &mut Self {
         self.rename(&format!("{}", self.ident));
+        self
+    }
+
+    pub fn into_borrowed(mut self) -> Self {
+        self.as_borrowed();
         self
     }
 
@@ -86,12 +96,11 @@ impl PathNamed {
     }
 
     pub fn split_self_for_impl(&self) -> (Self, Self, Self) {
-        let original = self.clone();
-        let mut owned = self.clone();
-        let mut borrowed = self.clone();
-        owned.as_owned();
-        borrowed.as_borrowed();
-        (original, borrowed, owned)
+        (
+            self.clone(),
+            self.clone().into_borrowed(),
+            self.clone().into_owned(),
+        )
     }
 
     pub fn lifetime(&self) -> Option<&syn::Lifetime> {
