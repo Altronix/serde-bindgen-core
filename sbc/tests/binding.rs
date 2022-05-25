@@ -274,56 +274,6 @@ fn assert_parsed(f: &JingleBells) {
     assert_eq!(f.b11, "apple");
 }
 
-fn assert_parsed_owned(f: &JingleBellsOwned) {
-    assert_eq!(stringify!(&f.b0), "b0");
-    assert_eq!(f.b1, 0);
-    assert_eq!(f.b2, [1, 2, 3]);
-    assert_eq!(f.b3, [true, false, false, false]);
-    assert_eq!(stringify!(&f.b4.b0), "b4.b0");
-    assert_eq!(f.b4.b1, 4);
-    assert_eq!(f.b4.b2, [5, 6, 7]);
-    assert_eq!(f.b4.b3, [false, true, false, false]);
-    assert_eq!(stringify!(&f.b5[0].b0), "b5[0].b0");
-    assert_eq!(f.b5[0].b1, 8);
-    assert_eq!(f.b5[0].b2, [9, 10, 11]);
-    assert_eq!(f.b5[0].b3, [false, false, true, false]);
-    assert_eq!(stringify!(&f.b5[1].b0), "b5[1].b0");
-    assert_eq!(f.b5[1].b1, 12);
-    assert_eq!(f.b5[1].b2, [13, 14, 15]);
-    assert_eq!(f.b5[1].b3, [false, false, false, true]);
-    assert_eq!(stringify!(&f.b5[2].b0), "b5[2].b0");
-    assert_eq!(f.b5[2].b1, 16);
-    assert_eq!(f.b5[2].b2, [17, 18, 19]);
-    assert_eq!(f.b5[2].b3, [true, false, false, false]);
-    assert_eq!(stringify!(&f.b6.b0), "b6.b0");
-    assert_eq!(f.b6.b1, 20);
-    assert_eq!(f.b6.b2, [21, 22, 23]);
-    assert_eq!(f.b6.b3, [false, true, false, false]);
-    assert_eq!(stringify!(&f.b7[0].b0), "b7[0].b0");
-    assert_eq!(f.b7[0].b1, 24);
-    assert_eq!(f.b7[0].b2, [25, 26, 27]);
-    assert_eq!(f.b7[0].b3, [false, false, true, false]);
-    assert_eq!(stringify!(&f.b7[1].b0), "b7[1].b0");
-    assert_eq!(f.b7[1].b1, 28);
-    assert_eq!(f.b7[1].b2, [29, 30, 31]);
-    assert_eq!(f.b7[1].b3, [false, false, false, true]);
-    assert_eq!(stringify!(&f.b7[2].b0), "b7[2].b0");
-    assert_eq!(f.b7[2].b1, 32);
-    assert_eq!(f.b7[2].b2, [33, 34, 35]);
-    assert_eq!(f.b7[2].b3, [true, false, false, false]);
-    assert_eq!(stringify!(&f.b8[0]), "apple");
-    assert_eq!(stringify!(&f.b8[1]), "banana");
-    assert_eq!(stringify!(&f.b8[2]), "car");
-    assert_eq!(stringify!(&f.b9[0][0]), "apple");
-    assert_eq!(stringify!(&f.b9[0][1]), "banana");
-    assert_eq!(stringify!(&f.b9[0][2]), "car");
-    assert_eq!(stringify!(&f.b9[1][0]), "apple");
-    assert_eq!(stringify!(&f.b9[1][1]), "banana");
-    assert_eq!(stringify!(&f.b9[1][2]), "car");
-    assert_eq!(f.b10, [36, 37, 38]);
-    assert_eq!(f.b11, []);
-}
-
 #[test]
 fn can_parse() {
     let mut f = std::mem::MaybeUninit::<JingleBells>::uninit();
@@ -392,5 +342,56 @@ fn can_copy_into_owned() {
     let mut owned = std::mem::MaybeUninit::<JingleBellsOwned>::uninit();
     unsafe { test_copy_jingle_bells(&mut *owned.as_mut_ptr(), &ROOT) };
     let owned = unsafe { owned.assume_init() };
-    assert_parsed_owned(&owned);
+    assert_eq!(stringify!(&owned.b0), "b0");
+    assert_eq!(owned.b1, 0);
+    assert_eq!(owned.b2, [1, 2, 3]);
+    assert_eq!(owned.b3, [true, false, false, false]);
+    assert_eq!(stringify!(&owned.b4.b0), "b4.b0");
+    assert_eq!(owned.b4.b1, 4);
+    assert_eq!(owned.b4.b2, [5, 6, 7]);
+    assert_eq!(owned.b4.b3, [false, true, false, false]);
+    assert_eq!(stringify!(&owned.b5[0].b0), "b5[0].b0");
+    assert_eq!(owned.b5[0].b1, 8);
+    assert_eq!(owned.b5[0].b2, [9, 10, 11]);
+    assert_eq!(owned.b5[0].b3, [false, false, true, false]);
+    assert_eq!(stringify!(&owned.b5[1].b0), "b5[1].b0");
+    assert_eq!(owned.b5[1].b1, 12);
+    assert_eq!(owned.b5[1].b2, [13, 14, 15]);
+    assert_eq!(owned.b5[1].b3, [false, false, false, true]);
+    assert_eq!(stringify!(&owned.b5[2].b0), "b5[2].b0");
+    assert_eq!(owned.b5[2].b1, 16);
+    assert_eq!(owned.b5[2].b2, [17, 18, 19]);
+    assert_eq!(owned.b5[2].b3, [true, false, false, false]);
+    assert_eq!(stringify!(&owned.b6.b0), "b6.b0");
+    assert_eq!(owned.b6.b1, 20);
+    assert_eq!(owned.b6.b2, [21, 22, 23]);
+    assert_eq!(owned.b6.b3, [false, true, false, false]);
+    assert_eq!(stringify!(&owned.b7[0].b0), "b7[0].b0");
+    assert_eq!(owned.b7[0].b1, 24);
+    assert_eq!(owned.b7[0].b2, [25, 26, 27]);
+    assert_eq!(owned.b7[0].b3, [false, false, true, false]);
+    assert_eq!(stringify!(&owned.b7[1].b0), "b7[1].b0");
+    assert_eq!(owned.b7[1].b1, 28);
+    assert_eq!(owned.b7[1].b2, [29, 30, 31]);
+    assert_eq!(owned.b7[1].b3, [false, false, false, true]);
+    assert_eq!(stringify!(&owned.b7[2].b0), "b7[2].b0");
+    assert_eq!(owned.b7[2].b1, 32);
+    assert_eq!(owned.b7[2].b2, [33, 34, 35]);
+    assert_eq!(owned.b7[2].b3, [true, false, false, false]);
+    assert_eq!(stringify!(&owned.b8[0]), "apple");
+    assert_eq!(stringify!(&owned.b8[1]), "banana");
+    assert_eq!(stringify!(&owned.b8[2]), "car");
+    assert_eq!(stringify!(&owned.b9[0][0]), "apple");
+    assert_eq!(stringify!(&owned.b9[0][1]), "banana");
+    assert_eq!(stringify!(&owned.b9[0][2]), "car");
+    assert_eq!(stringify!(&owned.b9[1][0]), "apple");
+    assert_eq!(stringify!(&owned.b9[1][1]), "banana");
+    assert_eq!(stringify!(&owned.b9[1][2]), "car");
+    assert_eq!(owned.b10, [36, 37, 38]);
+    assert_eq!(owned.b11, []);
+}
+
+#[test]
+fn can_reference_owned() {
+  //let mut owned = std::mem::
 }
