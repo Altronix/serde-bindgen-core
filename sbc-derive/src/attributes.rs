@@ -19,6 +19,7 @@
 
 use proc_macro2::TokenStream;
 use syn::parse::{Parse, ParseStream, Result};
+use syn::punctuated::Punctuated;
 use syn::token::Bracket;
 use syn::ExprArray;
 use syn::Ident;
@@ -31,19 +32,40 @@ use super::keyword;
 
 #[derive(Clone)]
 #[cfg_attr(feature = "testing", derive(Debug))]
-pub struct AttributeConfig(pub Option<(keyword::prefix, Token![=], syn::LitStr)>);
+pub struct ContainerAttribute {
+    pub ident: Ident,
+    pub eq: Token![=],
+    pub val: syn::LitStr,
+}
 
-impl Parse for AttributeConfig {
-    fn parse(input: ParseStream) -> Result<AttributeConfig> {
-        if input.peek(keyword::prefix) {
-            Ok(AttributeConfig(Some((
-                input.parse()?,
-                input.parse()?,
-                input.parse()?,
-            ))))
-        } else {
-            Ok(AttributeConfig(None))
-        }
+impl Parse for ContainerAttribute {
+    fn parse(input: ParseStream) -> Result<ContainerAttribute> {
+        Ok(ContainerAttribute {
+            ident: input.parse()?,
+            eq: input.parse()?,
+            val: input.parse()?,
+        })
+    }
+}
+
+#[derive(Clone)]
+#[cfg_attr(feature = "testing", derive(Debug))]
+pub struct ContainerAttributes(pub Punctuated<ContainerAttribute, Token![,]>);
+impl Parse for ContainerAttributes {
+    fn parse(input: ParseStream) -> Result<ContainerAttributes> {
+        let punctuated = Punctuated::parse_terminated(input)?;
+        Ok(ContainerAttributes(punctuated))
+    }
+}
+impl ContainerAttributes {
+    pub fn seek_prefix(&self) -> Option<&syn::LitStr> {
+        self.0.iter().find_map(|attr| {
+            if attr.ident == "prefix" {
+                Some(&attr.val)
+            } else {
+                None
+            }
+        })
     }
 }
 

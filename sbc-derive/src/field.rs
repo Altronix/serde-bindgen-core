@@ -82,6 +82,9 @@ impl Field {
     }
 
     pub fn weight<'a>(&'a self) -> (usize, Option<(&'a PathNamed, usize)>) {
+        // TODO - this assumption if field is decorated with a rename attribute
+        //        therefore we should check attributes for an alias and use alias
+        //        for weight calculation if it exists
         let wrapper_len = self.ident.to_string().len() + 3; // sizeof("%s": )
         let (size, remote) = self.ty.weight(&self.attributes);
         (size + wrapper_len, remote)

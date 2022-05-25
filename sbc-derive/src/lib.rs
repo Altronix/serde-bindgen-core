@@ -27,7 +27,7 @@ mod keyword;
 mod path;
 mod utils;
 
-use attributes::AttributeConfig;
+use attributes::ContainerAttributes;
 use context::Context;
 use proc_macro::TokenStream;
 use quote::quote;
@@ -35,10 +35,11 @@ use syn::parse_macro_input;
 
 #[proc_macro_attribute]
 pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let prefix = parse_macro_input!(attr as AttributeConfig)
-        .0
-        .map(|(_, _, s)| s.value())
-        .unwrap_or("sbc".to_string());
+    let container_attributes = parse_macro_input!(attr as ContainerAttributes);
+    let prefix = container_attributes
+        .seek_prefix()
+        .map(|lit| lit.value())
+        .unwrap_or_else(|| "sbc".to_string());
 
     // Parse the callers decorated struct
     let ctx: Context = parse_macro_input!(item);

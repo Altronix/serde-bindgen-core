@@ -298,7 +298,6 @@ fn can_print() {
     let printed = unsafe { printed.assume_init() };
     assert_eq!(ret, l as i32);
     assert_parsed(&printed);
-
 }
 
 #[test]
