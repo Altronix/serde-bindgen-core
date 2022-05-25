@@ -26,6 +26,7 @@ mod field;
 mod keyword;
 mod path;
 mod utils;
+mod descriptor;
 
 use attributes::ContainerAttributes;
 use context::Context;
