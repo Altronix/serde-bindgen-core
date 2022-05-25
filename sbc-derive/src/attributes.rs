@@ -58,9 +58,9 @@ impl Parse for ContainerAttributes {
     }
 }
 impl ContainerAttributes {
-    pub fn seek_prefix(&self) -> Option<&syn::LitStr> {
+    pub fn seek_val(&self, find: &str) -> Option<&syn::LitStr> {
         self.0.iter().find_map(|attr| {
-            if attr.ident == "prefix" {
+            if attr.ident == find {
                 Some(&attr.val)
             } else {
                 None

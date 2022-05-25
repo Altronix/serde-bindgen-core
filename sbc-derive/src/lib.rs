@@ -37,9 +37,16 @@ use syn::parse_macro_input;
 pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     let container_attributes = parse_macro_input!(attr as ContainerAttributes);
     let prefix = container_attributes
-        .seek_prefix()
+        .seek_val("prefix")
         .map(|lit| lit.value())
         .unwrap_or_else(|| "sbc".to_string());
+    let rename_all = container_attributes
+        .seek_val("rename_all")
+        .map(|lit| {
+            let val = lit.value();
+            Some(quote! {#[serde(rename_all= #val)]})
+        })
+        .unwrap_or(None);
 
     // Parse the callers decorated struct
     let ctx: Context = parse_macro_input!(item);
@@ -87,6 +94,7 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
         #[derive(serde::Deserialize)]
         #[derive(serde::Serialize)]
         #[serde(crate="self::serde")]
+        #rename_all
         #ctx
         #[repr(C)]
         #owned

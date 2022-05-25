@@ -61,3 +61,8 @@ fn can_calculate_weight() {
     assert_eq!(ret, 0);
     assert_eq!(len, FOO_MAX_LEN);
 }
+
+#[test]
+fn can_calcualte_weight_when_renamed() {
+    // TODO
+}
