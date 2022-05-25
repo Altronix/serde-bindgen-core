@@ -130,7 +130,7 @@ fn can_to_tokens_struct() {
 }
 
 #[test]
-fn can_stackify() {
+fn can_as_owned() {
     let mut original: Context = parse_quote!(
         pub struct Foo<'a> {
             /// sbc: len = 22
@@ -152,7 +152,7 @@ fn can_stackify() {
             id_5: u16,
         }
     };
-    original.stackify();
+    original.as_owned();
     let quoted = quote::quote! {#original};
     assert_eq!(expect.to_string(), quoted.to_string());
 }

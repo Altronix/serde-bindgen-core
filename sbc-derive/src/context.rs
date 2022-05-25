@@ -61,13 +61,13 @@ impl Context {
         (len, remotes)
     }
 
-    pub fn stackify(&mut self) {
-        self.path.stackify();
-        self.fields.iter_mut().for_each(|f| f.stackify());
+    pub fn as_owned(&mut self) {
+        self.path.as_owned();
+        self.fields.iter_mut().for_each(|f| f.as_owned());
     }
 
     pub fn into_owned(mut self) -> Context {
-        self.stackify();
+        self.as_owned();
         self
     }
 

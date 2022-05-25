@@ -58,7 +58,7 @@ impl PathNamed {
         }
     }
 
-    pub fn stackify(&mut self) -> &mut Self {
+    pub fn as_owned(&mut self) -> &mut Self {
         self.rename(&format!("{}Owned", self.ident))
             .strip_generics();
         self
@@ -70,7 +70,7 @@ impl PathNamed {
         self
     }
 
-    pub fn parsify(&mut self) -> &mut Self {
+    pub fn as_borrowed(&mut self) -> &mut Self {
         self.rename(&format!("{}", self.ident));
         self
     }
@@ -88,8 +88,8 @@ impl PathNamed {
     pub fn split_self_for_impl(&self) -> (Self, Self) {
         let mut owned = self.clone();
         let mut parse = self.clone();
-        owned.stackify();
-        parse.parsify();
+        owned.as_owned();
+        parse.as_borrowed();
         (owned, parse)
     }
 

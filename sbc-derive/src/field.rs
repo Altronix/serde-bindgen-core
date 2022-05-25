@@ -55,8 +55,8 @@ pub struct Field {
 }
 
 impl Field {
-    pub fn stackify(&mut self) {
-        self.ty.stackify(&self.attributes);
+    pub fn as_owned(&mut self) {
+        self.ty.as_owned(&self.attributes);
     }
 
     pub fn assignment_tokens(&self) -> TokenStream {
@@ -154,7 +154,7 @@ impl FieldType {
         }
     }
 
-    pub fn stackify(&mut self, attr: &Attributes) {
+    pub fn as_owned(&mut self, attr: &Attributes) {
         use FieldType::*;
         match self {
             RefStr(FieldTypeRef { ident, .. }) => {
@@ -165,10 +165,10 @@ impl FieldType {
                 *self = FieldType::Array(syn::parse_quote! {[u8;#len]});
             }
             Array(FieldTypeArray { ty, .. }) => {
-                ty.stackify(attr);
+                ty.as_owned(attr);
             }
             Struct(p) => {
-                p.stackify();
+                p.as_owned();
             }
 
             _ => {}
