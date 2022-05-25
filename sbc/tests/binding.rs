@@ -388,7 +388,7 @@ fn can_init() {
 }
 
 #[test]
-fn can_copy() {
+fn can_copy_into_owned() {
     let mut owned = std::mem::MaybeUninit::<JingleBellsOwned>::uninit();
     unsafe { test_copy_jingle_bells(&mut *owned.as_mut_ptr(), &ROOT) };
     let owned = unsafe { owned.assume_init() };

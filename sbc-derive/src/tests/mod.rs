@@ -26,14 +26,6 @@ use crate::field::Field;
 use std::matches;
 use syn::parse_quote;
 
-/*
-macro_rules! lit_is {
-    ($var:expr, $cmp:literal) => {
-        $var.base10_digits().parse().unwrap_or(0) == $cmp
-    };
-}
-*/
-
 #[test]
 fn can_parse_struct() {
     let s: Context = parse_quote!(
