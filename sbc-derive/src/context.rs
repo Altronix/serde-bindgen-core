@@ -57,7 +57,12 @@ impl Context {
                 (acc_len + len, acc_vec)
             },
         );
-        len += self.fields.len() - 1; // add a comma per field except the last
+        // add a comma per field except the last
+        len += if self.fields.len() > 0 {
+            self.fields.len() - 1
+        } else {
+            0
+        };
         (len, remotes)
     }
 
