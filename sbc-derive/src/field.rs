@@ -60,10 +60,6 @@ impl Field {
         self.ty.as_owned(&self.attributes);
     }
 
-    pub fn as_borrowed(&mut self, lifetime:Option<&syn::Lifetime>) {
-        self.ty.as_borrowed(lifetime);
-    }
-
     pub fn assignment_tokens(&self) -> TokenStream {
         let name = &self.ident;
         let init = self.attributes.seek_default();
@@ -173,21 +169,6 @@ impl FieldType {
             }
             FieldType::Struct(p) => {
                 p.as_owned();
-            }
-            _ => {}
-        }
-    }
-
-    pub fn as_borrowed(&mut self, lifetime: Option<&syn::Lifetime>) {
-        match self {
-            FieldType::Array(FieldTypeArray { ty, .. }) => match &**ty {
-                FieldType::Primative(i) if i == "u8" => {
-                    *self = FieldType::RefStr(parse_quote! {&#lifetime str});
-                }
-                _ => {}
-            },
-            FieldType::Struct(p) => {
-                p.as_borrowed();
             }
             _ => {}
         }

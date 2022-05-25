@@ -71,18 +71,6 @@ impl Context {
         self
     }
 
-    pub fn as_borrowed(&mut self) {
-        self.path.as_borrowed();
-        self.fields
-            .iter_mut()
-            .for_each(|f| f.as_borrowed(self.path.lifetime()));
-    }
-
-    pub fn into_borrowed(mut self) -> Context {
-        self.as_borrowed();
-        self
-    }
-
     pub fn impl_from_owned(&self) -> ImplFromOwned {
         ImplFromOwned::new(&self.path, &self.fields)
     }

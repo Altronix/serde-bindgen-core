@@ -40,8 +40,15 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
         .map(|(_, _, s)| s.value())
         .unwrap_or("sbc".to_string());
 
-    // Prse the callers decorated struct
+    // Parse the callers decorated struct
     let ctx: Context = parse_macro_input!(item);
+
+
+    // create a type alias
+    let ident = ctx.path.clone();
+    let borrowed = format!("{}Borrowed", ident.ident);
+    let mut alias = ident.clone();
+    alias.rename(&borrowed);
 
     // create an "owned" version of the struct. (no references)
     let owned = ctx.clone().into_owned();
@@ -77,6 +84,8 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     let quoted = quote! {
         #[no_mangle]
         #impl_weight
+        #[no_mangle]
+        pub type #alias = #ident;
         #[repr(C)]
         #[derive(serde::Deserialize)]
         #[derive(serde::Serialize)]
