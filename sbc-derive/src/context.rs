@@ -71,8 +71,8 @@ impl Context {
         self
     }
 
-    pub fn impl_from(&self) -> ImplFrom {
-        ImplFrom::new(&self.path, &self.fields)
+    pub fn impl_from_owned(&self) -> ImplFromOwned {
+        ImplFromOwned::new(&self.path, &self.fields)
     }
 
     pub fn impl_default(&self) -> ImplDefault {
@@ -193,18 +193,18 @@ impl<'a> ToTokens for ImplWeight<'a> {
     }
 }
 
-pub struct ImplFrom<'a> {
+pub struct ImplFromOwned<'a> {
     pub path: &'a PathNamed,
     pub fields: &'a Punctuated<Field, Token![,]>,
 }
 
-impl<'a> ImplFrom<'a> {
-    pub fn new(path: &'a PathNamed, fields: &'a Punctuated<Field, Token![,]>) -> ImplFrom<'a> {
-        ImplFrom { path, fields }
+impl<'a> ImplFromOwned<'a> {
+    pub fn new(path: &'a PathNamed, fields: &'a Punctuated<Field, Token![,]>) -> ImplFromOwned<'a> {
+        ImplFromOwned { path, fields }
     }
 }
 
-impl<'a> ToTokens for ImplFrom<'a> {
+impl<'a> ToTokens for ImplFromOwned<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
         let (other, ident) = self.path.split_self_for_impl();
         let (impl_generics, _ty_generics, where_clause) = self.path.split_generics_for_impl();

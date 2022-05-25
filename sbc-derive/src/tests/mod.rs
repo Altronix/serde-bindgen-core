@@ -17,11 +17,11 @@
 // @author Thomas Chiantia <thomas.chiantia@gmail.com>
 // @date 2022
 
+mod attribute;
 mod field;
 mod path;
-mod attribute;
 
-use crate::context::{Context, ImplDefault, ImplFrom};
+use crate::context::{Context, ImplDefault, ImplFromOwned};
 use crate::field::Field;
 use std::matches;
 use syn::parse_quote;
@@ -223,7 +223,7 @@ fn can_impl_from() {
             }
         }
     );
-    let impl_from = ImplFrom::new(&original.path, &original.fields);
+    let impl_from = ImplFromOwned::new(&original.path, &original.fields);
     let expect = quote::quote! {#expect};
     let quoted = quote::quote! {#impl_from};
     assert_eq!(expect.to_string(), quoted.to_string());
