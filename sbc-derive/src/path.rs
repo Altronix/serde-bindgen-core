@@ -93,6 +93,12 @@ impl PathNamed {
         (owned, parse)
     }
 
+    pub fn lifetime(&self) -> Option<&syn::Lifetime> {
+        self.generics
+            .as_ref()
+            .and_then(|generics| generics.lifetimes().find_map(|l| Some(&l.lifetime)))
+    }
+
     pub fn split_generics_for_impl(
         &self,
     ) -> (

@@ -21,7 +21,7 @@ mod attribute;
 mod field;
 mod path;
 
-use crate::context::{Context, ImplDefault, ImplFromOwned};
+use crate::context::{Context, ImplDefault, ImplFromRef};
 use crate::field::Field;
 use std::matches;
 use syn::parse_quote;
@@ -215,7 +215,7 @@ fn can_impl_from() {
             }
         }
     );
-    let impl_from = ImplFromOwned::new(&original.path, &original.fields);
+    let impl_from = ImplFromRef::new(&original.path, &original.fields);
     let expect = quote::quote! {#expect};
     let quoted = quote::quote! {#impl_from};
     assert_eq!(expect.to_string(), quoted.to_string());

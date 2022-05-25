@@ -55,6 +55,9 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     // create impl From block
     let impl_from_owned = ctx.impl_from_owned();
 
+    // create impl From block
+    let impl_from_ref = ctx.impl_from_ref();
+
     // create binding for copy function
     let binding_copy = ctx.binding_copy(&prefix);
 
@@ -80,6 +83,7 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
         #owned
         #impl_default
         #impl_from_owned
+        #impl_from_ref
         #binding_copy
         #binding_init
         #binding_parse

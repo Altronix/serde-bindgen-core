@@ -73,6 +73,13 @@ impl Field {
         quote! {#name: #assignment}
     }
 
+    pub fn from_ref_tokens(&self, var: &Ident) -> TokenStream {
+        let name = &self.ident;
+        let expr = quote! {#var.#name};
+        let assignment = self.ty.from_ref_tokens(&syn::parse_quote! {#expr});
+        quote! {#name: #assignment}
+    }
+
     pub fn weight<'a>(&'a self) -> (usize, Option<(&'a PathNamed, usize)>) {
         let wrapper_len = self.ident.to_string().len() + 3; // sizeof("%s": )
         let (size, remote) = self.ty.weight(&self.attributes);
@@ -192,6 +199,19 @@ impl FieldType {
                 let i = LitInt::new(&n.to_string(), a.n.span()).token();
                 let expr = quote! {#expr[#i]};
                 a.ty.from_owned_tokens(&expr)
+            }),
+        }
+    }
+
+    pub fn from_ref_tokens(&self, expr: &TokenStream) -> TokenStream {
+        match &self {
+            FieldType::RefStr(_) => quote! {core::str::from_utf8(#expr.as_slice()).unwrap_or("")},
+            FieldType::Struct(_) => quote! {From::from(&#expr)},
+            FieldType::Primative(_) => quote! {#expr},
+            FieldType::Array(a) => a.surround(|n| {
+                let i = LitInt::new(&n.to_string(), a.n.span()).token();
+                let expr = quote! {#expr[#i]};
+                a.ty.from_ref_tokens(&expr)
             }),
         }
     }

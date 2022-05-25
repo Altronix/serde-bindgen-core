@@ -75,6 +75,10 @@ impl Context {
         ImplFromOwned::new(&self.path, &self.fields)
     }
 
+    pub fn impl_from_ref(&self) -> ImplFromRef {
+        ImplFromRef::new(&self.path, &self.fields)
+    }
+
     pub fn impl_default(&self) -> ImplDefault {
         ImplDefault::new(&self.path, &self.fields)
     }
@@ -193,6 +197,39 @@ impl<'a> ToTokens for ImplWeight<'a> {
     }
 }
 
+pub struct ImplFromRef<'a> {
+    pub path: &'a PathNamed,
+    pub fields: &'a Punctuated<Field, Token![,]>,
+}
+
+impl<'a> ImplFromRef<'a> {
+    pub fn new(path: &'a PathNamed, fields: &'a Punctuated<Field, Token![,]>) -> ImplFromRef<'a> {
+        ImplFromRef { path, fields }
+    }
+}
+
+impl<'a> ToTokens for ImplFromRef<'a> {
+    fn to_tokens(&self, toks: &mut TokenStream) {
+        let (other, ident) = self.path.split_self_for_impl();
+        let (impl_generics, _ty_generics, where_clause) = self.path.split_generics_for_impl();
+        let var = quote::format_ident!("s");
+        let from_tokens = self
+            .fields
+            .iter()
+            .map(|field| field.from_owned_tokens(&var));
+        quote! {
+            impl #impl_generics From<&#ident> for #other #where_clause {
+                fn from(s: &#ident) -> #other {
+                    #other {
+                        #(#from_tokens),*
+                    }
+                }
+            }
+        }
+        .to_tokens(toks);
+    }
+}
+
 pub struct ImplFromOwned<'a> {
     pub path: &'a PathNamed,
     pub fields: &'a Punctuated<Field, Token![,]>,
@@ -206,17 +243,17 @@ impl<'a> ImplFromOwned<'a> {
 
 impl<'a> ToTokens for ImplFromOwned<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
-        let (other, ident) = self.path.split_self_for_impl();
+        let (owned, ident) = self.path.split_self_for_impl();
         let (impl_generics, _ty_generics, where_clause) = self.path.split_generics_for_impl();
         let var = quote::format_ident!("s");
-        let from_tokens = self
-            .fields
-            .iter()
-            .map(|field| field.from_owned_tokens(&var));
+        let from_tokens = self.fields.iter().map(|field| field.from_ref_tokens(&var));
+        let lifetime = ident.lifetime();
+        let mut ret = ident.clone();
+        ret.strip_generics();
         quote! {
-            impl #impl_generics From<&#ident> for #other #where_clause {
-                fn from(s: &#ident) -> #other {
-                    #other {
+            impl #impl_generics From<&#lifetime #owned> for #ident #where_clause {
+                fn from(s: &#lifetime #owned) -> #ident {
+                    #ret {
                         #(#from_tokens),*
                     }
                 }
