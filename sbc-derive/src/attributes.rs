@@ -26,6 +26,8 @@ use syn::Ident;
 use syn::LitInt;
 use syn::Token;
 
+use serde::Deserialize; // TODO feature guard
+
 use quote::ToTokens;
 
 use super::keyword;
@@ -210,15 +212,22 @@ impl Parse for MaybeOurs {
 
 #[derive(Clone)]
 #[cfg_attr(feature = "testing", derive(Debug))]
+#[derive(Deserialize)] // TODO feature guard
+#[serde(try_from = "String")] // TODO feature guard
 pub struct DefaultLit(pub TokenStream);
 impl DefaultLit {
-    /// TODO find a different way to detect an array
-    ///      for some reason we need full features
     pub fn is_array(&self) -> bool {
         self.parse::<ExprArray>().map(|_| true).unwrap_or(false)
     }
     pub fn parse<T: Parse>(&self) -> Result<T> {
         syn::parse2(self.0.clone())
+    }
+}
+
+impl std::convert::TryFrom<String> for DefaultLit {
+    type Error = proc_macro2::LexError;
+    fn try_from(s: String) -> std::result::Result<DefaultLit, Self::Error> {
+        s.parse().map(DefaultLit)
     }
 }
 

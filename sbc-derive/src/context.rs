@@ -35,6 +35,7 @@ use proc_macro2::TokenStream;
 use crate::field::Field;
 use crate::path::PathNamed;
 use crate::utils;
+use std::convert::TryFrom;
 
 #[derive(Clone)]
 pub(crate) struct Context {
@@ -140,6 +141,17 @@ impl ToTokens for Context {
         })
     }
 }
+
+/*
+#[cfg(feature = "yaml")]
+impl TryFrom<&str> for Context {
+    type Error = serde_yaml::Error;
+    fn try_from(txt: &str) -> std::result::Result<Context, Self::Error> {
+        let desc: crate::descriptor::DescField = serde_yaml::from_str(txt)?;
+        unimplemented!()
+    }
+}
+*/
 
 pub struct ImplDefault<'a> {
     pub path: &'a PathNamed,

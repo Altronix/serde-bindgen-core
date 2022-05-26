@@ -26,6 +26,8 @@ mod field;
 mod keyword;
 mod path;
 mod utils;
+
+// #[cfg(feature = "yaml")]
 mod descriptor;
 
 use attributes::ContainerAttributes;
