@@ -58,9 +58,19 @@ impl PathNamed {
         }
     }
 
+    pub fn is_camel_case(&self) -> bool {
+        match self.ident.to_string().chars().next() {
+            Some(c) => c.is_uppercase(),
+            None => false,
+        }
+    }
+
     pub fn as_owned(&mut self) -> &mut Self {
-        self.rename(&format!("{}Owned", self.ident))
-            .strip_generics();
+        let name = match self.is_camel_case() {
+            true => format!("{}Owned", self.ident),
+            false => format!("{}_owned", self.ident),
+        };
+        self.rename(&name).strip_generics();
         self
     }
 
@@ -76,7 +86,11 @@ impl PathNamed {
     }
 
     pub fn as_borrowed(&mut self) -> &mut Self {
-        self.rename(&format!("{}Borrowed", self.ident));
+        let name = match self.is_camel_case() {
+            true => format!("{}Borrowed", self.ident),
+            false => format!("{}_borrowed", self.ident),
+        };
+        self.rename(&name);
         self
     }
 

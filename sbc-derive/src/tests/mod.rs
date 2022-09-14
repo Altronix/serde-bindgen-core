@@ -258,6 +258,24 @@ fn can_binding_copy() {
 }
 
 #[test]
+fn can_binding_copy_snake_case() {
+    let original: Context = parse_quote!(
+        pub struct foo<'a> {
+            item: &'a str,
+        }
+    );
+    let binding = original.binding_copy("foo");
+    let expect = quote::quote! {
+        #[no_mangle]
+        pub extern "C" fn foo_copy_foo<'a>(dst: &mut foo_owned, src: &foo_borrowed<'a>) {
+            *dst = From::from(src);
+        }
+    };
+    let quoted = quote::quote! {#binding};
+    assert_eq!(expect.to_string(), quoted.to_string());
+}
+
+#[test]
 fn can_binding_parse() {
     let original: Context = parse_quote!(
         pub struct Foo<'a> {
@@ -293,6 +311,31 @@ fn can_binding_print() {
     let expect = quote::quote! {
         #[no_mangle]
         pub extern "C" fn foo_print_foo_borrowed<'a>(data: &FooBorrowed<'a>, bytes: *mut u8, len: &mut usize) -> i32 {
+            let mut slice = unsafe { core::slice::from_raw_parts_mut(bytes,*len) };
+            match serde_json_core::to_slice(data, &mut slice) {
+                Ok(l) => {
+                    *len = l;
+                    0
+                },
+                Err(_) => -1
+            }
+        }
+    };
+    let quoted = quote::quote! {#binding};
+    assert_eq!(expect.to_string(), quoted.to_string());
+}
+
+#[test]
+fn can_binding_print_snake_case() {
+    let original: Context = parse_quote!(
+        pub struct foo<'a> {
+            item: &'a str,
+        }
+    );
+    let binding = original.binding_print("foo");
+    let expect = quote::quote! {
+        #[no_mangle]
+        pub extern "C" fn foo_print_foo_borrowed<'a>(data: &foo_borrowed<'a>, bytes: *mut u8, len: &mut usize) -> i32 {
             let mut slice = unsafe { core::slice::from_raw_parts_mut(bytes,*len) };
             match serde_json_core::to_slice(data, &mut slice) {
                 Ok(l) => {
