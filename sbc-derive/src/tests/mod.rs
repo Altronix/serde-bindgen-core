@@ -228,10 +228,28 @@ fn can_binding_default() {
             item: &'a str,
         }
     );
-    let binding = original.binding_init("foo");
+    let binding = original.binding_init(Some("foo"));
     let expect = quote::quote! {
         #[no_mangle]
         pub extern "C" fn foo_init_foo<'a>(dst: &mut FooOwned) {
+            *dst=Default::default();
+        }
+    };
+    let quoted = quote::quote! {#binding};
+    assert_eq!(expect.to_string(), quoted.to_string());
+}
+
+#[test]
+fn can_binding_default_no_prefix() {
+    let original: Context = parse_quote!(
+        pub struct Foo<'a> {
+            item: &'a str,
+        }
+    );
+    let binding = original.binding_init(None::<&str>);
+    let expect = quote::quote! {
+        #[no_mangle]
+        pub extern "C" fn foo_init<'a>(dst: &mut FooOwned) {
             *dst=Default::default();
         }
     };
@@ -246,7 +264,7 @@ fn can_binding_copy() {
             item: &'a str,
         }
     );
-    let binding = original.binding_copy("foo");
+    let binding = original.binding_copy(Some("foo"));
     let expect = quote::quote! {
         #[no_mangle]
         pub extern "C" fn foo_copy_foo<'a>(dst: &mut FooOwned, src: &FooBorrowed<'a>) {
@@ -264,7 +282,7 @@ fn can_binding_copy_snake_case() {
             item: &'a str,
         }
     );
-    let binding = original.binding_copy("foo");
+    let binding = original.binding_copy(Some("foo"));
     let expect = quote::quote! {
         #[no_mangle]
         pub extern "C" fn foo_copy_foo<'a>(dst: &mut foo_owned, src: &foo_borrowed<'a>) {
@@ -282,7 +300,7 @@ fn can_binding_parse() {
             item: &'a str,
         }
     );
-    let binding = original.binding_parse("foo");
+    let binding = original.binding_parse(Some("foo"));
     let expect = quote::quote! {
         #[no_mangle]
         pub extern "C" fn foo_parse_foo<'a>(dst: &mut FooBorrowed<'a>, bytes: *const u8, len: usize) -> i32 {
@@ -307,7 +325,7 @@ fn can_binding_print() {
             item: &'a str,
         }
     );
-    let binding = original.binding_print("foo");
+    let binding = original.binding_print(Some("foo"));
     let expect = quote::quote! {
         #[no_mangle]
         pub extern "C" fn foo_print_foo_borrowed<'a>(data: &FooBorrowed<'a>, bytes: *mut u8, len: &mut usize) -> i32 {
@@ -332,7 +350,7 @@ fn can_binding_print_snake_case() {
             item: &'a str,
         }
     );
-    let binding = original.binding_print("foo");
+    let binding = original.binding_print(Some("foo"));
     let expect = quote::quote! {
         #[no_mangle]
         pub extern "C" fn foo_print_foo_borrowed<'a>(data: &foo_borrowed<'a>, bytes: *mut u8, len: &mut usize) -> i32 {

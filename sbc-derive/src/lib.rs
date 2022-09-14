@@ -31,15 +31,15 @@ use attributes::ContainerAttributes;
 use context::Context;
 use proc_macro::TokenStream;
 use quote::quote;
+use std::borrow::Cow;
 use syn::parse_macro_input;
 
 #[proc_macro_attribute]
 pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     let container_attributes = parse_macro_input!(attr as ContainerAttributes);
-    let prefix = container_attributes
+    let prefix: Option<Cow<str>> = container_attributes
         .seek_val("prefix")
-        .map(|lit| lit.value())
-        .unwrap_or_else(|| "sbc".to_string());
+        .map(|lit| Cow::Owned(lit.value()));
     let rename_all = container_attributes
         .seek_val("rename_all")
         .map(|lit| {
@@ -70,19 +70,19 @@ pub fn binding(attr: TokenStream, item: TokenStream) -> TokenStream {
     let impl_from_ref = ctx.impl_from_ref();
 
     // create binding for copy function
-    let binding_copy = ctx.binding_copy(&prefix);
+    let binding_copy = ctx.binding_copy(prefix.clone());
 
     // create binding for init function
-    let binding_init = ctx.binding_init(&prefix);
+    let binding_init = ctx.binding_init(prefix.clone());
 
     // create binding for parse function
-    let binding_parse = ctx.binding_parse(&prefix);
+    let binding_parse = ctx.binding_parse(prefix.clone());
 
     // create binding for parse function
-    let binding_print = ctx.binding_print(&prefix);
+    let binding_print = ctx.binding_print(prefix.clone());
 
     // create binding for parse function
-    let binding_print_owned = ctx.binding_print_owned(&prefix);
+    let binding_print_owned = ctx.binding_print_owned(prefix.clone());
 
     // render all the new items
     let quoted = quote! {

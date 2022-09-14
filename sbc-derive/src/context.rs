@@ -32,9 +32,19 @@ use heck::AsSnakeCase;
 // proc_macro2
 use proc_macro2::TokenStream;
 
+use std::borrow::Cow;
+
 use crate::field::Field;
 use crate::path::PathNamed;
 use crate::utils;
+
+fn functionify(name: &syn::Ident, op: &str, prefix: Option<&Cow<str>>) -> syn::Ident {
+    let name = format!("{}", AsSnakeCase(format!("{}", name)));
+    match prefix {
+        Some(prefix) => quote::format_ident!("{}_{}_{}", prefix, op, name),
+        _ => quote::format_ident!("{}_{}", name, op),
+    }
+}
 
 #[derive(Clone)]
 pub(crate) struct Context {
@@ -93,24 +103,27 @@ impl Context {
         ImplWeight::new(&self.path, weight, remotes)
     }
 
-    pub fn binding_copy<'a>(&'a self, prefix: &'a str) -> BindingCopy<'a> {
+    pub fn binding_copy<'a, P: Into<Cow<'a, str>>>(&'a self, prefix: Option<P>) -> BindingCopy<'a> {
         BindingCopy::new(prefix, &self.path)
     }
 
-    pub fn binding_init<'a>(&'a self, prefix: &'a str) -> BindingDefault<'a> {
-        BindingDefault::new(prefix, &self.path)
+    pub fn binding_init<'a, P: Into<Cow<'a, str>>>(&'a self, p: Option<P>) -> BindingDefault<'a> {
+        BindingDefault::new(p, &self.path)
     }
 
-    pub fn binding_parse<'a>(&'a self, prefix: &'a str) -> BindingParse<'a> {
-        BindingParse::new(prefix, &self.path)
+    pub fn binding_parse<'a, P: Into<Cow<'a, str>>>(&'a self, p: Option<P>) -> BindingParse<'a> {
+        BindingParse::new(p, &self.path)
     }
 
-    pub fn binding_print<'a>(&'a self, prefix: &'a str) -> BindingPrint<'a> {
-        BindingPrint::new(prefix, &self.path)
+    pub fn binding_print<'a, P: Into<Cow<'a, str>>>(&'a self, p: Option<P>) -> BindingPrint<'a> {
+        BindingPrint::new(p, &self.path)
     }
 
-    pub fn binding_print_owned<'a>(&'a self, prefix: &'a str) -> BindingPrintOwned<'a> {
-        BindingPrintOwned::new(prefix, &self.path)
+    pub fn binding_print_owned<'a, P: Into<Cow<'a, str>>>(
+        &'a self,
+        p: Option<P>,
+    ) -> BindingPrintOwned<'a> {
+        BindingPrintOwned::new(p, &self.path)
     }
 }
 
@@ -274,11 +287,15 @@ impl<'a> ToTokens for ImplFromOwned<'a> {
 
 pub struct BindingDefault<'a> {
     ident: &'a PathNamed,
-    prefix: &'a str,
+    prefix: Option<Cow<'a, str>>,
 }
 
 impl<'a> BindingDefault<'a> {
-    fn new(prefix: &'a str, ident: &'a PathNamed) -> BindingDefault<'a> {
+    fn new<P: Into<Cow<'a, str>>>(
+        mut prefix: Option<P>,
+        ident: &'a PathNamed,
+    ) -> BindingDefault<'a> {
+        let prefix = prefix.take().map(|p| p.into());
         BindingDefault { ident, prefix }
     }
 }
@@ -287,11 +304,7 @@ impl<'a> ToTokens for BindingDefault<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
         let (original, _borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
-        let name_fn = quote::format_ident!(
-            "{}_init_{}",
-            self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", original.ident)))
-        );
+        let name_fn = functionify(&original.ident, "init", self.prefix.as_ref());
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(dst: &mut #owned)  {
@@ -304,11 +317,12 @@ impl<'a> ToTokens for BindingDefault<'a> {
 
 pub struct BindingCopy<'a> {
     ident: &'a PathNamed,
-    prefix: &'a str,
+    prefix: Option<Cow<'a, str>>,
 }
 
 impl<'a> BindingCopy<'a> {
-    fn new(prefix: &'a str, ident: &'a PathNamed) -> BindingCopy<'a> {
+    fn new<P: Into<Cow<'a, str>>>(mut prefix: Option<P>, ident: &'a PathNamed) -> BindingCopy<'a> {
+        let prefix = prefix.take().map(|p| p.into());
         BindingCopy { ident, prefix }
     }
 }
@@ -317,11 +331,7 @@ impl<'a> ToTokens for BindingCopy<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
         let (original, borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
-        let name_fn = quote::format_ident!(
-            "{}_copy_{}",
-            self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", original.ident)))
-        );
+        let name_fn = functionify(&original.ident, "copy", self.prefix.as_ref());
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(dst: &mut #owned, src: &#borrowed)  {
@@ -334,11 +344,12 @@ impl<'a> ToTokens for BindingCopy<'a> {
 
 pub struct BindingParse<'a> {
     ident: &'a PathNamed,
-    prefix: &'a str,
+    prefix: Option<Cow<'a, str>>,
 }
 
 impl<'a> BindingParse<'a> {
-    fn new(prefix: &'a str, ident: &'a PathNamed) -> BindingParse<'a> {
+    fn new<P: Into<Cow<'a, str>>>(mut prefix: Option<P>, ident: &'a PathNamed) -> BindingParse<'a> {
+        let prefix = prefix.take().map(|p| p.into());
         BindingParse { ident, prefix }
     }
 }
@@ -347,11 +358,7 @@ impl<'a> ToTokens for BindingParse<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
         let (original, borrowed, _owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
-        let name_fn = quote::format_ident!(
-            "{}_parse_{}",
-            self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", original.ident)))
-        );
+        let name_fn = functionify(&original.ident, "parse", self.prefix.as_ref());
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(dst: &mut #borrowed, bytes: *const u8, len: usize) -> i32 {
@@ -371,11 +378,12 @@ impl<'a> ToTokens for BindingParse<'a> {
 
 pub struct BindingPrint<'a> {
     ident: &'a PathNamed,
-    prefix: &'a str,
+    prefix: Option<Cow<'a, str>>,
 }
 
 impl<'a> BindingPrint<'a> {
-    fn new(prefix: &'a str, ident: &'a PathNamed) -> BindingPrint<'a> {
+    fn new<P: Into<Cow<'a, str>>>(mut prefix: Option<P>, ident: &'a PathNamed) -> BindingPrint<'a> {
+        let prefix = prefix.take().map(|p| p.into());
         BindingPrint { ident, prefix }
     }
 }
@@ -384,11 +392,7 @@ impl<'a> ToTokens for BindingPrint<'a> {
     fn to_tokens(&self, toks: &mut TokenStream) {
         let (_original, borrowed, _owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
-        let name_fn = quote::format_ident!(
-            "{}_print_{}",
-            self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", borrowed.ident)))
-        );
+        let name_fn = functionify(&borrowed.ident, "print", self.prefix.as_ref());
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(data: &#borrowed, bytes: *mut u8, len: &mut usize) -> i32 {
@@ -408,11 +412,15 @@ impl<'a> ToTokens for BindingPrint<'a> {
 
 pub struct BindingPrintOwned<'a> {
     ident: &'a PathNamed,
-    prefix: &'a str,
+    prefix: Option<Cow<'a, str>>,
 }
 
 impl<'a> BindingPrintOwned<'a> {
-    fn new(prefix: &'a str, ident: &'a PathNamed) -> BindingPrintOwned<'a> {
+    fn new<P: Into<Cow<'a, str>>>(
+        mut prefix: Option<P>,
+        ident: &'a PathNamed,
+    ) -> BindingPrintOwned<'a> {
+        let prefix = prefix.take().map(|p| p.into());
         BindingPrintOwned { ident, prefix }
     }
 }
@@ -422,11 +430,7 @@ impl<'a> ToTokens for BindingPrintOwned<'a> {
         let (_original, borrowed, owned) = self.ident.split_self_for_impl();
         let (impl_generics, _, _) = self.ident.split_generics_for_impl();
         let lifetime = self.ident.lifetime();
-        let name_fn = quote::format_ident!(
-            "{}_print_{}",
-            self.prefix,
-            format!("{}", AsSnakeCase(format!("{}", owned.ident)))
-        );
+        let name_fn = functionify(&owned.ident, "print", self.prefix.as_ref());
         quote! {
             #[no_mangle]
             pub extern "C" fn #name_fn #impl_generics(data: &#lifetime #owned, bytes: *mut u8, len: &#lifetime mut usize) -> i32 {
