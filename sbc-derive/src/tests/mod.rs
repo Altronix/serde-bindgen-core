@@ -249,7 +249,7 @@ fn can_binding_default_no_prefix() {
     let binding = original.binding_init(None::<&str>);
     let expect = quote::quote! {
         #[no_mangle]
-        pub extern "C" fn foo_init<'a>(dst: &mut FooOwned) {
+        pub extern "C" fn init_foo<'a>(dst: &mut FooOwned) {
             *dst=Default::default();
         }
     };

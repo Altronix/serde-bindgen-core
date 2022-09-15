@@ -42,7 +42,7 @@ fn functionify(name: &syn::Ident, op: &str, prefix: Option<&Cow<str>>) -> syn::I
     let name = format!("{}", AsSnakeCase(format!("{}", name)));
     match prefix {
         Some(prefix) => quote::format_ident!("{}_{}_{}", prefix, op, name),
-        _ => quote::format_ident!("{}_{}", name, op),
+        _ => quote::format_ident!("{}_{}", op, name),
     }
 }
 
